@@ -3,7 +3,8 @@ package org.mulesoft.amfintegration
 import amf.core.annotations._
 import amf.core.annotations.{LexicalInformation, ReferenceTargets, SourceAST, SourceNode, SynthesizedField}
 import amf.core.annotations._
-import amf.core.metamodel.Field
+import amf.core.metamodel.Type.ArrayLike
+import amf.core.metamodel.{Field, Obj}
 import amf.core.model.document.{BaseUnit, DeclaresModel, Document, EncodesModel}
 import amf.core.model.domain.{AmfObject, AmfScalar, DomainElement}
 import amf.core.parser
@@ -11,7 +12,7 @@ import amf.core.parser.{Annotations, FieldEntry, Value, Position => AmfPosition}
 import amf.plugins.document.vocabularies.model.document.{Dialect, Vocabulary}
 import amf.plugins.document.vocabularies.model.domain.{ClassTerm, NodeMapping, PropertyMapping, PropertyTerm}
 import amf.plugins.document.vocabularies.plugin.ReferenceStyles
-import amf.plugins.document.webapi.annotations.{DeclarationKey, DeclarationKeys, ExternalJsonSchemaShape, Inferred}
+import amf.plugins.document.webapi.annotations.{DeclarationKey, DeclarationKeys, ExternalJsonSchemaShape}
 import amf.plugins.domain.shapes.annotations.ParsedFromTypeExpression
 import amf.plugins.domain.webapi.metamodel.AbstractModel
 import org.mulesoft.als.common.YamlWrapper._
@@ -69,28 +70,18 @@ object AmfImplicits {
 
     def isSynthesized: Boolean = ann.contains(classOf[SynthesizedField])
 
-    def isVirtual: Boolean  = ann.contains(classOf[VirtualObject])
+    def isVirtual: Boolean  = ann.contains(classOf[VirtualElement])
     def isInferred: Boolean = ann.contains(classOf[Inferred])
     def isDeclared: Boolean = ann.contains(classOf[DeclaredElement])
 
     def targets(): Map[String, parser.Range] =
       ann.find(classOf[ReferenceTargets]).map(_.targets).getOrElse(Map.empty)
 
-    def containsPosition(amfPosition: AmfPosition): Option[Boolean] =
-      this.ast() map {
-        case ast: YMapEntry =>
-          YMapEntryOps(ast).contains(amfPosition)
-        case ast: YMap =>
-          AlsYMapOps(ast).contains(amfPosition)
-        case ast: YNode if ast.isNull =>
-          true
-        case ast: YNode if ast.tagType == YType.Str =>
-          ast.contains(amfPosition) || ast.asScalar.exists(_.contains(amfPosition))
-        case ast: YScalar =>
-          AlsYScalarOps(ast).contains(amfPosition)
-        case other =>
-          other.contains(amfPosition)
-      }
+    def containsAstPosition(amfPosition: AmfPosition): Option[Boolean] = this.ast() map { _.contains(amfPosition) }
+
+    def containsPosition(amfPosition: AmfPosition): Boolean =
+      this.ast() map { _.contains(amfPosition) } getOrElse (false)
+
     def isRamlTypeExpression: Boolean = ann.find(classOf[ParsedFromTypeExpression]).isDefined
 
     def ramlExpression(): Option[String] = ann.find(classOf[ParsedFromTypeExpression]).map(_.expression)
@@ -108,6 +99,11 @@ object AmfImplicits {
 
   implicit class FieldEntryImplicit(f: FieldEntry) {
 
+    def objectSon: Boolean = f.field.`type` match {
+      case _: Obj         => true
+      case arr: ArrayLike => arr.element.isInstanceOf[Obj]
+      case _              => false
+    }
     // B.containsLexically(A)
     // true=> solo cuando B.ann y A.ann y A esta dentro de B
     def containsLexically(other: FieldEntry): Boolean = {
@@ -186,7 +182,7 @@ object AmfImplicits {
       .exists(_.toBool)
 
     def containsPosition(amfPosition: AmfPosition): Boolean =
-      amfObject.annotations.containsPosition(amfPosition).getOrElse(false)
+      amfObject.annotations.containsAstPosition(amfPosition).getOrElse(false)
   }
 
   implicit class DomainElementImp(d: DomainElement) extends AmfObjectImp(d) {

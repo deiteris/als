@@ -1,12 +1,12 @@
 package org.mulesoft.als.suggestions.plugins.aml.webapi
 
+import amf.core.annotations.Inferred
 import amf.core.model.DataType
 import amf.core.model.domain.extensions.PropertyShape
 import amf.core.model.domain.{AmfObject, Shape}
 import amf.core.parser.Value
 import amf.plugins.document.vocabularies.model.document.Dialect
 import amf.plugins.document.vocabularies.model.domain.NodeMapping
-import amf.plugins.document.webapi.annotations.Inferred
 import amf.plugins.domain.shapes.metamodel.ScalarShapeModel
 import amf.plugins.domain.shapes.models.{AnyShape, ScalarShape}
 import org.mulesoft.als.suggestions.RawSuggestion

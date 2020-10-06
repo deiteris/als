@@ -175,13 +175,12 @@ object YamlWrapper {
         ast.contains(amfPosition, editionMode)
       case ast: YNode if ast.isNull =>
         true
+      case ast: YNode if ast.tagType == YType.Str =>
+        ast.contains(amfPosition) || ast.asScalar.exists(_.contains(amfPosition))
       case ast: YScalar =>
         AlsYScalarOps(ast).contains(amfPosition, editionMode)
       case seq: YSequence => seq.contains(amfPosition, editionMode)
       case _              => super.contains(amfPosition, editionMode)
     }
-
-    def isValue(amfPosition: AmfPosition): Boolean =
-      contains(amfPosition) && !isKey(amfPosition)
   }
 }

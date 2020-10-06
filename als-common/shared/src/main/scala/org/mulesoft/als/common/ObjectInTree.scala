@@ -60,7 +60,7 @@ case class ObjectInTree(obj: AmfObject, stack: Seq[AmfObject], amfPosition: AmfP
       (f.value.annotations.ast() match {
         case Some(e: YMapEntry) =>
           e.contains(amfPosition) && !(e.key.range.lineTo == amfPosition.line && e.key.range.columnFrom == amfPosition.column) // start of the entry
-        case _ => f.value.annotations.containsPosition(amfPosition).getOrElse(false)
+        case _ => f.value.annotations.containsAstPosition(amfPosition).getOrElse(false)
       })
 
   private def inValue(f: FieldEntry) =
@@ -96,7 +96,7 @@ case class ObjectInTree(obj: AmfObject, stack: Seq[AmfObject], amfPosition: AmfP
 
 object ObjectInTreeBuilder {
 
-  def fromUnit(bu: BaseUnit, position: AmfPosition, location: Option[String], definedBy: Dialect): ObjectInTree = {
+  def fromUnit(bu: BaseUnit, position: AmfPosition, location: String, definedBy: Dialect): ObjectInTree = {
     val (obj, stack) =
       bu.findSonWithStack(position, location, Seq((f: FieldEntry) => f.field != BaseUnitModel.References), definedBy)
     ObjectInTree(obj, stack, position)
@@ -104,7 +104,7 @@ object ObjectInTreeBuilder {
 
   def fromSubTree(element: DomainElement,
                   position: AmfPosition,
-                  location: Option[String],
+                  location: String,
                   previousStack: Seq[AmfObject],
                   definedBy: Dialect): ObjectInTree = {
     val (obj, stack) = element.findSonWithStack(position, location, Seq.empty, definedBy)

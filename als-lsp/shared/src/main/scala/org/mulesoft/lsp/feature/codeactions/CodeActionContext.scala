@@ -4,7 +4,7 @@ import org.mulesoft.lsp.feature.codeactions.CodeActionKind.CodeActionKind
 import org.mulesoft.lsp.feature.diagnostic.Diagnostic
 
 /**
-  *
+  *x
   * @param diagnostics
   * An array of diagnostics known on the client side overlapping the range provided to the
   * `textDocument/codeAction` request. They are provided so that the server knows which

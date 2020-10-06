@@ -1,7 +1,8 @@
 package org.mulesoft.als.common
 
-import amf.core.metamodel.ModelDefaultBuilder
+import amf.core.metamodel.{Field, ModelDefaultBuilder}
 import amf.core.metamodel.Type.ArrayLike
+import amf.core.metamodel.document.{BaseUnitModel, DocumentModel}
 import amf.core.metamodel.domain.{DataNodeModel, DomainElementModel, ShapeModel}
 import amf.core.model.domain.{AmfArray, AmfElement, AmfObject, DataNode}
 import amf.core.parser.{FieldEntry, Position => AmfPosition}
@@ -20,8 +21,11 @@ import amf.plugins.domain.webapi.metamodel.bindings.{
 import org.mulesoft.als.common.YamlWrapper._
 import org.mulesoft.amfintegration.AmfImplicits._
 import org.yaml.model.YPart
+import org.mulesoft.amfintegration.AmfImplicits.AmfAnnotationsImp
 
-import scala.collection.mutable.ArrayBuffer
+import scala.annotation.tailrec
+import scala.collection.mutable
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 object AmfSonElementFinder {
 
@@ -31,7 +35,6 @@ object AmfSonElementFinder {
       amfElement match {
         case amfObject: AmfObject =>
           amfObject.fields.fields().exists { f =>
-            containsAsValue(f.value.annotations.ast(), amfPosition) ||
             (f.value.annotations.isVirtual && sonContainsNonVirtualPosition(f.value.value, amfPosition))
           }
       }
@@ -47,7 +50,7 @@ object AmfSonElementFinder {
               arr.values
                 .collectFirst({
                   case obj: AmfObject
-                      if f.value.annotations.containsPosition(amfPosition).getOrElse(true) &&
+                      if f.value.annotations.containsAstPosition(amfPosition).getOrElse(true) &&
                         (obj.annotations.isVirtual &&
                           sonContainsNonVirtualPosition(obj, amfPosition) || obj.containsPosition(amfPosition)) =>
                     obj
@@ -55,7 +58,7 @@ object AmfSonElementFinder {
                 .nonEmpty)
 
           case v =>
-            f.value.annotations.containsPosition(amfPosition).getOrElse(true) &&
+            f.value.annotations.containsAstPosition(amfPosition).getOrElse(true) &&
               v.annotations
                 .ast()
                 .map(ast => ast.contains(amfPosition, editionMode = true))
@@ -64,63 +67,120 @@ object AmfSonElementFinder {
       }
 
     def findSon(amfPosition: AmfPosition, filterFns: Seq[FieldEntry => Boolean], definedBy: Dialect): AmfObject =
-      findSonWithStack(amfPosition, None, filterFns, definedBy)._1
+      findSonWithStack(amfPosition, "", filterFns, definedBy)._1
 
-    private def containsAsValue(maybePart: Option[YPart], amfPosition: AmfPosition): Boolean =
-      maybePart.exists(_.isValue(amfPosition))
+    case class SonFinder(location: String, definedBy: Dialect, amfPosition: AmfPosition) {
 
+      val fieldAstFilter: FieldEntry => Boolean = (f: FieldEntry) =>
+        f.value.annotations
+          .containsAstPosition(amfPosition)
+          .getOrElse(
+            f.value.annotations.isVirtual || f.value.annotations.isSynthesized || f.field == DocumentModel.Declares)
+
+      private val traversed: ListBuffer[AmfObject] = ListBuffer()
+
+      val fieldFilters = Seq((f: FieldEntry) => f.field != BaseUnitModel.References, fieldAstFilter)
+
+      // only object can have sons. Scalar and arrays are field from objects.
+      def buildStack(obj: AmfObject): Seq[(AmfObject, Option[FieldEntry])] = {
+        if (traversed.contains(obj)) Nil
+        else {
+          traversed += obj
+          val f = findField(obj)
+          val son: Option[AmfObject] = f.flatMap { fe =>
+            nextObject(fe, obj)
+          }
+          son.map(buildStack).getOrElse(Nil) :+ (obj, f)
+        }
+      }
+
+      def nextObject(fe: FieldEntry, parent: AmfObject): Option[AmfObject] = {
+        if (fe.objectSon && fe.value.value.location().forall(_ == location))
+          fe.value.value match {
+            case e: AmfArray =>
+              nextObject(e).orElse(buildFromMeta(parent, fe, e))
+            case o: AmfObject if o.containsPosition(amfPosition) => Some(o)
+            case _                                               => None
+          } else None
+      }
+
+      def buildFromMeta(parent: AmfObject, fe: FieldEntry, arr: AmfArray): Option[AmfObject] = {
+        if (explicitArray(fe, parent, definedBy)) matchInnerArrayElement(fe, arr, definedBy, parent)
+        else None
+      }
+
+      def nextObject(array: AmfArray): Option[AmfObject] = {
+        val objects = array.values.collect({ case o: AmfObject => o })
+        objects
+          .find(_.annotations.containsPosition(amfPosition))
+          .orElse(objects.find(v => v.annotations.isVirtual || v.annotations.isSynthesized))
+      }
+
+      def findField(amfObject: AmfObject): Option[FieldEntry] = {
+        amfObject.fields.fields().filter(f => fieldFilters.forall(fn => fn(f))) match {
+          case Nil         => None
+          case head :: Nil => Some(head)
+          case list =>
+            val entries = list.filterNot(v => v.value.annotations.isVirtual || v.value.annotations.isSynthesized)
+            entries.lastOption.orElse(list.lastOption).map(f => f)
+        }
+      }
+    }
     def findSonWithStack(amfPosition: AmfPosition,
-                         location: Option[String],
+                         location: String,
                          filterFns: Seq[FieldEntry => Boolean],
                          definedBy: Dialect): (AmfObject, Seq[AmfObject]) = {
-      val posFilter = positionFinderFN(amfPosition, location)
-
-      def innerNode(amfObject: AmfObject): Option[FieldEntry] =
-        amfObject.fields
-          .fields()
-          .filter(f => {
-            filterFns.forall(fn => fn(f)) &&
-            posFilter(f)
-          }) match {
-          case Nil =>
-            None
-          case list =>
-            val entries = list
-              .filterNot(v => v.value.annotations.isVirtual || v.value.annotations.isSynthesized)
-            entries.lastOption
-              .orElse(list.lastOption)
-        }
-
-      var a: Iterable[AmfObject]        = None // todo: recursive instead of tail recursive?
-      val stack: ArrayBuffer[AmfObject] = ArrayBuffer()
-      var result                        = obj
-      do {
-        a = innerNode(result).flatMap(entry =>
-          entry.value.value match {
-            case e: AmfArray =>
-              e.findChild(amfPosition, location, filterFns: Seq[FieldEntry => Boolean]) match {
-                case Some(o: AmfObject) if o.containsPosition(amfPosition) || o.annotations.isVirtual =>
-                  Some(o)
-                case _
-                    if entry.value.value.annotations.containsPosition(amfPosition).getOrElse(true) &&
-                      entry.field.`type`.isInstanceOf[ArrayLike] &&
-                      explicitArray(entry, result, definedBy) =>
-                  matchInnerArrayElement(entry, e, definedBy, result)
-                case _ => None
-              }
-            case e: AmfObject
-                if e.containsPosition(amfPosition) || containsAsValue(entry.value.annotations.ast(), amfPosition) =>
-              Some(e)
-            case _ => None
-        })
-        a.headOption.foreach(head => {
-          if (!stack.contains(head)) {
-            stack.prepend(result)
-            result = head
-          }
-        })
-      } while (a.nonEmpty && a.head == result)
-      (result, stack)
+      val tuples  = SonFinder(location, definedBy, amfPosition).buildStack(obj)
+      val objects = tuples.map(_._1)
+      (objects.head, objects.tail)
+//      val posFilter = positionFinderFN(amfPosition, location)
+//
+//      def innerNode(amfObject: AmfObject): Option[FieldEntry] =
+//        amfObject.fields
+//          .fields()
+//          .filter(f => {
+//            filterFns.forall(fn => fn(f)) &&
+//            posFilter(f)
+//          }) match {
+//          case Nil =>
+//            None
+//          case list =>
+//            val entries = list
+//              .filterNot(v => v.value.annotations.isVirtual || v.value.annotations.isSynthesized)
+//            entries.lastOption
+//              .orElse(list.lastOption)
+//        }
+//
+//      var a: Iterable[AmfObject]        = None // todo: recursive instead of tail recursive?
+//      val stack: ArrayBuffer[AmfObject] = ArrayBuffer()
+//      var result                        = obj
+//      do {
+//        a = innerNode(result).flatMap(entry =>
+//          entry.value.value match {
+//            case e: AmfArray =>
+//              e.findChild(amfPosition, location, filterFns: Seq[FieldEntry => Boolean]) match {
+//                case Some(o: AmfObject) if o.containsPosition(amfPosition) || o.annotations.isVirtual =>
+//                  Some(o)
+//                case _
+//                    if entry.value.value.annotations.containsAstPosition(amfPosition).getOrElse(true) &&
+//                      entry.field.`type`.isInstanceOf[ArrayLike] &&
+//                      explicitArray(entry, result, definedBy) =>
+//                  matchInnerArrayElement(entry, e, definedBy, result)
+//                case _ => None
+//              }
+//            case e: AmfObject
+//                if e.containsPosition(amfPosition) =>
+//              Some(e)
+//            case _ => None
+//        })
+//        a.headOption.foreach(head => {
+//          if (!stack.contains(head)) {
+//            stack.prepend(result)
+//            result = head
+//          }
+//        })
+//      } while (a.nonEmpty && a.head == result)
+//      (result, stack)
     }
   }
 
