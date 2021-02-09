@@ -1,8 +1,10 @@
 package org.mulesoft.als.server.modules.workspace
 
-import java.util.UUID
+import amf.core.AMFSerializer
+import amf.core.emitter.RenderOptions
 
-import amf.core.remote.Platform
+import java.util.UUID
+import amf.core.remote.{Amf, Mimes, Platform, Vendor}
 import amf.internal.environment.Environment
 import org.mulesoft.als.common.URIImplicits._
 import org.mulesoft.als.server.logger.Logger
@@ -10,11 +12,12 @@ import org.mulesoft.als.server.modules.ast._
 import org.mulesoft.als.server.textsync.EnvironmentProvider
 import org.mulesoft.als.server.workspace.UnitTaskManager
 import org.mulesoft.als.server.workspace.extract.{WorkspaceConf, WorkspaceConfigurationProvider}
-import org.mulesoft.amfintegration.AmfParseResult
+import org.mulesoft.amfintegration.{AmfParseResult, ParserHelper}
 import org.mulesoft.lsp.feature.telemetry.{MessageTypes, TelemetryProvider}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 class WorkspaceContentManager(val folder: String,
                               environmentProvider: EnvironmentProvider,
@@ -191,6 +194,17 @@ class WorkspaceContentManager(val folder: String,
     environmentProvider.amfConfiguration
       .modelBuilder()
       .parse(uri.toAmfDecodedUri, environment.withResolver(repository.resolverCache))
+      .andThen {
+        case Failure(exception) =>
+          logger.error(exception.getMessage, "WorkspaceContentManager", "innerParse")
+        case Success(value) =>
+          new AMFSerializer(value.baseUnit.cloneUnit(),
+                            Mimes.`APPLICATION/LD+JSONLD`,
+                            Amf.name,
+                            RenderOptions().withCompactUris.withoutSourceMaps).renderToString
+            .foreach(s => logger.debug(s"SERIALIZED $uri: {\n$s\n}", "WorkspaceContentManager", "innerParse"))
+
+      }
 
   def getRelationships(uri: String): Relationships =
     Relationships(repository, () => Some(getUnit(uri)))
