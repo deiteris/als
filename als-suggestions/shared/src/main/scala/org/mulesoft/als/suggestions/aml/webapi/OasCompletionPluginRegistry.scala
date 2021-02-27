@@ -21,6 +21,7 @@ import org.mulesoft.als.suggestions.plugins.aml.webapi.oas.structure.{
   SchemaExampleException
 }
 import org.mulesoft.als.suggestions.plugins.aml.webapi.{
+  OasLikeVendorExtensionsReferenceCompletionPlugin,
   ObjectExamplePropertiesCompletionPlugin,
   SecuredByCompletionPlugin,
   WebApiKnownValueCompletionPlugin
@@ -52,7 +53,8 @@ trait OasBaseCompletionRegistry extends WebApiCompletionPluginRegistry {
     OasNumberShapeFormatValues :+
     QueryParamNamesFromPath :+
     WebApiKnownValueCompletionPlugin :+
-    ResponsesDeclarationCodes
+    ResponsesDeclarationCodes :+
+    OasLikeVendorExtensionsReferenceCompletionPlugin
 }
 
 object Oas20CompletionPluginRegistry extends OasBaseCompletionRegistry {

@@ -12,6 +12,7 @@ import amf.plugins.domain.shapes.metamodel._
 import amf.plugins.domain.webapi.metamodel._
 import amf.plugins.domain.webapi.metamodel.api.WebApiModel
 import amf.plugins.domain.webapi.metamodel.templates.{ResourceTypeModel, TraitModel}
+import org.mulesoft.amfintegration.AmfInstance
 import org.mulesoft.language.outline.structure.structureImpl.SymbolKind.SymbolKind
 import org.mulesoft.language.outline.structure.structureImpl.factory.amlfactory.{
   AmlBuilderFactory,
@@ -25,7 +26,7 @@ import org.mulesoft.language.outline.structure.structureImpl.factory.webapi.{
   RamlBuilderFactory
 }
 
-class StructureBuilder(unit: BaseUnit, definedBy: Dialect) {
+class StructureBuilder(unit: BaseUnit, definedBy: Dialect, amfInstance: AmfInstance) {
 
   // todo: general amf model dialect?
   private val factory: BuilderFactory = {
@@ -43,7 +44,7 @@ class StructureBuilder(unit: BaseUnit, definedBy: Dialect) {
     }
   }
 
-  private val context = new StructureContextBuilder(unit)
+  private val context = new StructureContextBuilder(unit, amfInstance.alsAmlPlugin.registry)
     .withDialect(definedBy)
     .withFactory(factory)
     .build() // todo: change for default amf model dialect
@@ -53,8 +54,8 @@ class StructureBuilder(unit: BaseUnit, definedBy: Dialect) {
 }
 
 object StructureBuilder {
-  def listSymbols(unit: BaseUnit, definedBy: Dialect): List[DocumentSymbol] =
-    new StructureBuilder(unit, definedBy).listSymbols()
+  def listSymbols(unit: BaseUnit, definedBy: Dialect, amfInstance: AmfInstance): List[DocumentSymbol] =
+    new StructureBuilder(unit, definedBy, amfInstance).listSymbols()
 }
 
 object KindForResultMatcher {

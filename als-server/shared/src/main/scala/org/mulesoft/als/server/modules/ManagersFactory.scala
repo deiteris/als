@@ -146,7 +146,7 @@ case class WorkspaceManagerFactory(projectDependencies: List[BaseUnitListener],
                            configurationManager)
 
   lazy val structureManager =
-    new StructureManager(workspaceManager, telemetryManager, logger)
+    new StructureManager(workspaceManager, telemetryManager, logger, amfConfiguration)
 
   lazy val definitionManager =
     new GoToDefinitionManager(workspaceManager, telemetryManager, logger)

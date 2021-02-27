@@ -2,14 +2,12 @@ package org.mulesoft.amfintegration.dialect.dialects.metadialect
 
 import amf.core.vocabulary.Namespace.XsdTypes._
 import org.mulesoft.amfintegration.dialect.dialects.oas.nodes.DialectNode
-import amf.plugins.document.vocabularies.metamodel.domain.PropertyMappingModel
+import amf.plugins.document.vocabularies.metamodel.domain.{AnnotationMappingModel, PropertyMappingModel}
 import amf.plugins.document.vocabularies.model.domain.PropertyMapping
+import org.mulesoft.amfintegration.dialect.dialects.metadialect.PropertyMappingObjectNode.{location, name}
 
-object PropertyMappingObjectNode extends DialectNode{
-  override def name: String = "PropertyMappingObjectNode"
 
-  override def nodeTypeMapping: String = PropertyMappingModel.`type`.head.iri()
-
+trait PropertiesMappingProperties extends DialectNode {
   override def properties: Seq[PropertyMapping] = Seq(
     PropertyMapping()
       .withId(location + s"#/declarations/$name/name")
@@ -27,17 +25,17 @@ object PropertyMappingObjectNode extends DialectNode{
       .withName("range")
       .withLiteralRange(xsdUri.iri())
       .withEnum(Seq("string" ,
-  "integer" ,
-  "boolean" ,
-  "float" ,
-  "decimal" ,
-  "double" ,
-  "duration" ,
-  "dateTime" ,
+        "integer" ,
+        "boolean" ,
+        "float" ,
+        "decimal" ,
+        "double" ,
+        "duration" ,
+        "dateTime" ,
 
         "time" ,
-  "date" ,
-  "anyType",
+        "date" ,
+        "anyType",
         "anyUri",
         "link",
         "number",
@@ -45,7 +43,7 @@ object PropertyMappingObjectNode extends DialectNode{
         "any",
         "anyNode")),
     PropertyMapping()
-    .withId(location + s"#/declarations/$name/mapKey")
+      .withId(location + s"#/declarations/$name/mapKey")
       .withNodePropertyMapping(PropertyMappingModel.MapKeyProperty.value.iri())
       .withName("mapKey")
       .withLiteralRange(xsdUri.iri()),
@@ -118,5 +116,22 @@ object PropertyMappingObjectNode extends DialectNode{
       .withAllowMultiple(true)
       .withLiteralRange(xsdString.iri()),
   )
+}
+object AnnotationsMappingObjectNode extends PropertiesMappingProperties{
+  override def name: String = "AnnotationsMappingObjectNode"
 
+  override def nodeTypeMapping: String = AnnotationMappingModel.`type`.head.iri()
+
+  override def properties: Seq[PropertyMapping] = Seq(PropertyMapping()
+    .withId(location + s"#/declarations/$name/target")
+    .withNodePropertyMapping(AnnotationMappingModel.AnnotationTarget.value.iri())
+    .withName("target")
+    .withLiteralRange(xsdString.iri())) ++ super.properties
+
+}
+
+object PropertyMappingObjectNode extends PropertiesMappingProperties{
+  override def name: String = "PropertyMappingObjectNode"
+
+  override def nodeTypeMapping: String = PropertyMappingModel.`type`.head.iri()
 }

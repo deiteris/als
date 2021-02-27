@@ -1,13 +1,15 @@
 package org.mulesoft.als.suggestions.aml
 
+import amf.core.VendorExtensionCompiler
 import amf.core.metamodel.domain.common.{NameFieldSchema, NameFieldShacl}
 import amf.core.model.document.BaseUnit
 import amf.core.model.domain.AmfObject
 import amf.core.parser.FieldEntry
 import amf.plugins.document.vocabularies.model.document.Dialect
-import amf.plugins.document.vocabularies.model.domain.{NodeMapping, PropertyMapping}
+import amf.plugins.document.vocabularies.model.domain.{DialectDomainElement, NodeMapping, PropertyMapping}
 import org.mulesoft.als.common.ObjectInTree
 import org.mulesoft.amfintegration.AmfImplicits._
+import org.mulesoft.amfintegration.AmfInstance
 
 case class PropertyMappingFilter(objectInTree: ObjectInTree, actualDialect: Dialect, nm: NodeMapping) {
 
@@ -54,6 +56,7 @@ case class PropertyMappingFilter(objectInTree: ObjectInTree, actualDialect: Dial
 }
 
 object DialectNodeFinder {
+
   def find(amfObject: AmfObject, fieldEntry: Option[FieldEntry], actualDialect: Dialect): Option[NodeMapping] = {
     amfObject.metaURIs
       .flatMap { v =>
@@ -95,6 +98,55 @@ object DialectNodeFinder {
         }
       }
       .collectFirst({ case nm: NodeMapping => nm })
+  }
+
+  def find(objInTree: ObjectInTree,
+           fieldEntry: Option[FieldEntry],
+           actualDialect: Dialect,
+           amfInstance: AmfInstance): Option[NodeMapping] = {
+    val defaultMapping = objInTree.obj.metaURIs
+      .flatMap { v =>
+        actualDialect.declares.find {
+          case s: NodeMapping =>
+            s.nodetypeMapping.value() == v &&
+              fieldEntry.forall(f => {
+                s.propertiesMapping()
+                  .find(pm =>
+                    pm.fields
+                      .fields()
+                      .exists(_.value.toString == f.field.value.iri()))
+                  .exists(_.mapTermKeyProperty().isNullOrEmpty)
+              })
+          case _ => false
+        }
+      }
+      .collectFirst({ case nm: NodeMapping => nm })
+    if (defaultMapping.isEmpty) checkSemanticExtensions(objInTree, fieldEntry, amfInstance)
+    else defaultMapping
+  }
+
+  private def checkSemanticExtensions(objectInTree: ObjectInTree,
+                                      fieldEntry: Option[FieldEntry],
+                                      amfInstance: AmfInstance): Option[NodeMapping] = {
+    if (objectInTree.obj.isInstanceOf[DialectDomainElement] && objectInTree.stack.exists(_.extendedFields.nonEmpty)) {
+      objectInTree.stack.find(_.extendedFields.nonEmpty) match {
+        case Some(p) =>
+          val jumped: Seq[AmfObject] = objectInTree.stack.splitAt(objectInTree.stack.indexOf(p))._1
+          val value =
+            if (jumped.isEmpty) objectInTree.obj
+            else jumped.last
+
+          p.extendedFields.fields().find(_.value.value == value) match {
+            case Some(FieldEntry(field, value)) =>
+              amfInstance.alsAmlPlugin.registry
+                .vendorExtensionForId(field.value.iri())
+                .map(_._3)
+                .flatMap(d => find(objectInTree.obj, fieldEntry, d))
+            case _ => None
+          }
+        case _ => None
+      }
+    } else None
   }
 
   def find(metaUri: String, actualDialect: Dialect): Option[NodeMapping] =

@@ -1,0 +1,32 @@
+[
+  {
+    "label": "(test-nested)",
+    "kind": [],
+    "detail": "semantic-extension",
+    "documentation": "(test-nested)",
+    "deprecated": [],
+    "preselect": [],
+    "sortText": "21(test-nested)",
+    "filterText": "(test-nested): ",
+    "insertText": null,
+    "insertTextFormat": [
+      1
+    ],
+    "textEdit": {
+      "range": {
+        "start": {
+          "line": 8,
+          "character": 4
+        },
+        "end": {
+          "line": 8,
+          "character": 5
+        }
+      },
+      "newText": "(test-nested): "
+    },
+    "additionalTextEdits": null,
+    "commitCharacters": null,
+    "command": null
+  }
+]

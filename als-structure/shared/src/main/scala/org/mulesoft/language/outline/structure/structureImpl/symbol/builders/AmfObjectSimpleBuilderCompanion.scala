@@ -1,10 +1,11 @@
 package org.mulesoft.language.outline.structure.structureImpl.symbol.builders
 
-import amf.core.annotations.SourceAST
+import amf.core.annotations.{LexicalInformation, SourceAST}
 import amf.core.metamodel.domain.{DomainElementModel, LinkableElementModel}
 import amf.core.model.domain.AmfObject
 import amf.core.parser.Range
 import amf.plugins.document.webapi.annotations.InlineDefinition
+import org.mulesoft.als.common.dtoTypes.{EmptyPositionRange, PositionRange}
 import org.mulesoft.language.outline.structure.structureImpl.{DocumentSymbol, KindForResultMatcher, SymbolKind}
 import org.yaml.model.YMapEntry
 
@@ -39,6 +40,20 @@ trait AmfObjectSymbolBuilder[DM <: AmfObject] extends SymbolBuilder[DM] {
       .flatMap(o =>
         ctx.factory
           .builderFor(o))
-      .flatMap(_.build())
+      .flatMap(_.build()) ++ buildSemanticExtensionNames(element)
+
+  private def buildSemanticExtensionNames(element: AmfObject) = {
+    element.extendedFields.fields().flatMap { fe =>
+      val range1 = fe.value.annotations
+        .find(classOf[LexicalInformation])
+        .orElse(fe.value.value.annotations.find(classOf[LexicalInformation]))
+        .map(le => PositionRange(le.range))
+        .getOrElse(EmptyPositionRange)
+      ctx.registry
+        .vendorExtensionForId(fe.field.value.iri())
+        .map(_._1)
+        .map(DocumentSymbol(_, SymbolKind.Property, range1, Nil))
+    }
+  }
 
 }

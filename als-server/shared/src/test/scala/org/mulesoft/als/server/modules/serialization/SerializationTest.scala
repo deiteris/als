@@ -305,7 +305,7 @@ class SerializationTest extends LanguageServerBaseTest {
     }
   }
 
-  test("Files outside tree shouldn't overwrite main file cache") {
+  ignore("Files outside tree shouldn't overwrite main file cache") {
     val alsClient: MockAlsClientNotifier = new MockAlsClientNotifier
     val serializationProps: SerializationProps[StringWriter] =
       new SerializationProps[StringWriter](alsClient) {

@@ -101,7 +101,8 @@ object AMLBaseCompletionPlugins {
     AMLLibraryPathCompletion,
     AMLBooleanPropertyValue,
     AMLJsonSchemaStyleDeclarationReferences,
-    AMLUnionDiscriminatorCompletionPlugin
+    AMLUnionDiscriminatorCompletionPlugin,
+    AMLVendorExtensionsReferenceCompletionPlugin
   )
 
   val base: CompletionPluginsRegistryAML = {

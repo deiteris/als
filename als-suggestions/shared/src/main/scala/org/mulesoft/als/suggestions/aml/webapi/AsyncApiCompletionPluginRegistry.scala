@@ -3,7 +3,10 @@ package org.mulesoft.als.suggestions.aml.webapi
 import amf.plugins.document.vocabularies.model.document.Dialect
 import org.mulesoft.als.suggestions.AMLBaseCompletionPlugins
 import org.mulesoft.als.suggestions.interfaces.AMLCompletionPlugin
-import org.mulesoft.als.suggestions.plugins.aml.webapi.SecuredByCompletionPlugin
+import org.mulesoft.als.suggestions.plugins.aml.webapi.{
+  OasLikeVendorExtensionsReferenceCompletionPlugin,
+  SecuredByCompletionPlugin
+}
 import org.mulesoft.als.suggestions.plugins.aml.webapi.async.bindings.{
   AsyncApiBindingsCompletionPlugin,
   BindingsDiscreditableProperties
@@ -57,7 +60,8 @@ object AsyncApiCompletionPluginRegistry extends WebApiCompletionPluginRegistry {
       Async2SecuredByCompletionPlugin :+
       Async2MessageExamplesCompletionPlugin :+
       RamlTypeDeclarationReferenceCompletionPlugin :+
-      Async2ExamplesPlugin
+      Async2ExamplesPlugin :+
+      OasLikeVendorExtensionsReferenceCompletionPlugin
 
   override def plugins: Seq[AMLCompletionPlugin] = all
 

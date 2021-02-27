@@ -142,10 +142,14 @@ lazy val actions = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(common % "compile->compile;test->test" )
   .in(file("./als-actions"))
   .settings(settings: _*)
+  .jvmSettings(
+    target := baseDirectory.value / "als-actions" / "jvm" / "target"
+  )
   .jsSettings(
     skip in packageJSDependencies := false,
     scalaJSOutputMode := OutputMode.Defaults,
-    scalaJSModuleKind := ModuleKind.CommonJSModule
+    scalaJSModuleKind := ModuleKind.CommonJSModule,
+    target := baseDirectory.value / "als-actions" / "js" / "target"
   ).disablePlugins(SonarPlugin)
 
 lazy val actionsJVM = server.jvm.in(file("./als-actions/jvm"))
@@ -158,7 +162,7 @@ val installJsDependencies = TaskKey[Unit]("installJsDependencies", "Runs npm i")
 lazy val server = crossProject(JSPlatform, JVMPlatform)
   .settings(name := "als-server")
   .settings(libraryDependencies += "org.wvlet.airframe" %% "airframe" % "19.3.7")
-  .dependsOn(actions, suggestions, structure % "compile->compile;test->test")
+  .dependsOn(actions, suggestions % "compile->compile;test->test", structure % "compile->compile;test->test")
   .in(file("./als-server"))
   .settings(settings: _*)
   .disablePlugins(SonarPlugin)

@@ -44,7 +44,7 @@ class AmlCompletionRequest(val baseUnit: BaseUnit,
   val nodeDialect: Dialect =
     objectInTree.objVendor.flatMap(amfInstance.alsAmlPlugin.dialectFor).getOrElse(actualDialect)
 
-  val currentNode: Option[NodeMapping] = DialectNodeFinder.find(objectInTree.obj, None, nodeDialect)
+  val currentNode: Option[NodeMapping] = DialectNodeFinder.find(objectInTree, None, nodeDialect, amfInstance)
 
   private def entryAndMapping: Option[(FieldEntry, Boolean)] = {
     objectInTree.fieldValue

@@ -2,6 +2,7 @@ package org.mulesoft.language.outline.test
 
 import amf.core.model.document.BaseUnit
 import amf.plugins.document.vocabularies.model.document.Dialect
+import org.mulesoft.amfintegration.AmfInstance
 import org.mulesoft.language.outline.structure.structureImpl.{DocumentSymbol, StructureBuilder}
 import org.mulesoft.language.outline.test.DocumentSymbolNode._
 import upickle.default.write
@@ -9,7 +10,7 @@ import upickle.default.write
 abstract class BaseStructureTest extends OutlineTest[List[DocumentSymbol]] {
 
   override def readDataFromAST(unit: BaseUnit, position: Int, definedBy: Dialect): List[DocumentSymbol] =
-    StructureBuilder.listSymbols(unit, definedBy)
+    StructureBuilder.listSymbols(unit, definedBy, AmfInstance.default)
 
   override def writeDataToString(data: List[DocumentSymbol]): String =
     write[List[DocumentSymbolNode]](data.map(DocumentSymbolNode.sharedToTransport), 2)

@@ -1,5 +1,6 @@
 package org.mulesoft.als.server
 
+import org.mulesoft.als.server.modules.completion.ServerSuggestionsTest
 import org.mulesoft.als.server.protocol.LanguageServer
 import org.mulesoft.als.server.modules.{WorkspaceManagerFactory, WorkspaceManagerFactoryBuilder}
 import org.mulesoft.als.server.textsync.TextDocument
@@ -34,9 +35,9 @@ class LanguageServerImplTest extends LanguageServerBaseTest {
 
   def buildServer(): LanguageServer =
     new LanguageServerBuilder(factory.documentManager,
-      factory.workspaceManager,
-      factory.configurationManager,
-      factory.resolutionTaskManager).build()
+                              factory.workspaceManager,
+                              factory.configurationManager,
+                              factory.resolutionTaskManager).build()
 
   override def rootPath: String = ""
 }

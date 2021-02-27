@@ -1,13 +1,13 @@
 package org.mulesoft.als.server.modules.structure
 
 import java.util.UUID
-
 import amf.core.model.document.BaseUnit
 import org.mulesoft.als.server.RequestModule
 import org.mulesoft.als.server.logger.Logger
 import org.mulesoft.als.server.modules.common.LspConverter
 import org.mulesoft.als.server.modules.workspace.CompilableUnit
 import org.mulesoft.als.server.workspace.UnitAccessor
+import org.mulesoft.amfintegration.AmfInstance
 import org.mulesoft.language.outline.structure.structureImpl.{DocumentSymbol, StructureBuilder}
 import org.mulesoft.lsp.ConfigType
 import org.mulesoft.lsp.feature.documentsymbol._
@@ -20,7 +20,8 @@ import scala.concurrent.Future
 
 class StructureManager(val unitAccesor: UnitAccessor[CompilableUnit],
                        private val telemetryProvider: TelemetryProvider,
-                       private val logger: Logger)
+                       private val logger: Logger,
+                       amfInstance: AmfInstance)
     extends RequestModule[DocumentSymbolClientCapabilities, Unit] {
 
   override val `type`: ConfigType[DocumentSymbolClientCapabilities, Unit] =
@@ -86,6 +87,6 @@ class StructureManager(val unitAccesor: UnitAccessor[CompilableUnit],
   }
 
   def getStructureFromAST(cu: CompilableUnit, uuid: String): List[DocumentSymbol] =
-    StructureBuilder.listSymbols(cu.unit, cu.definedBy)
+    StructureBuilder.listSymbols(cu.unit, cu.definedBy, amfInstance)
 
 }

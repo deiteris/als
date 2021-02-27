@@ -23,7 +23,7 @@ object NamespaceForTermCompletionPlugin extends AMLCompletionPlugin {
   private def applies(request: AmlCompletionRequest) =
     request.amfObject match {
       case _: NodeMappable =>
-        request.yPartBranch.parentEntryIs("classTerm")
+        request.yPartBranch.parentEntryIs("classTerm") || request.yPartBranch.parentEntryIs("target")
       case _: PropertyMapping =>
         request.yPartBranch.parentEntryIs("propertyTerm") ||
           request.yPartBranch.parentEntryIs("mapTermKey") ||

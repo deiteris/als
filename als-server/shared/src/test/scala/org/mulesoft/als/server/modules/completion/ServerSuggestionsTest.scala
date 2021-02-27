@@ -58,7 +58,13 @@ abstract class ServerSuggestionsTest extends LanguageServerBaseTest with EitherV
                            markerInfo: MarkerInfo): Future[Seq[CompletionItem]] = {
 
     openFile(server)(filePath, markerInfo.content)
+    getPureCompletions(server, markerInfo, filePath)
 
+  }
+
+  def getPureCompletions(server: LanguageServer,
+                         markerInfo: MarkerInfo,
+                         filePath: String): Future[Seq[CompletionItem]] = {
     val completionHandler = server.resolveHandler(CompletionRequestType).value
 
     completionHandler(

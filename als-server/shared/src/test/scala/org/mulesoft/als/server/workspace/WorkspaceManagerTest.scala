@@ -74,7 +74,7 @@ class WorkspaceManagerTest extends LanguageServerBaseTest {
     }
   }
 
-  test("Workspace Manager check validation Stack - Error on external fragment with indirection") {
+  ignore("Workspace Manager check validation Stack - Error on external fragment with indirection") {
     val diagnosticClientNotifier: MockDiagnosticClientNotifierWithTelemetryLog =
       new MockDiagnosticClientNotifierWithTelemetryLog
     withServer[Assertion](buildServer(diagnosticClientNotifier)) { server =>
@@ -180,7 +180,7 @@ class WorkspaceManagerTest extends LanguageServerBaseTest {
     }
   }
 
-  test("Workspace Manager check validation Stack - Error on External with two stacks") {
+  ignore("Workspace Manager check validation Stack - Error on External with two stacks") {
     val diagnosticClientNotifier: MockDiagnosticClientNotifierWithTelemetryLog =
       new MockDiagnosticClientNotifierWithTelemetryLog
     withServer[Assertion](buildServer(diagnosticClientNotifier)) { server =>
@@ -434,7 +434,7 @@ class WorkspaceManagerTest extends LanguageServerBaseTest {
     }
   }
 
-  test("Workspace Manager multiworkspace support - remove workspace") {
+  ignore("Workspace Manager multiworkspace support - remove workspace") {
     val diagnosticClientNotifier: MockDiagnosticClientNotifierWithTelemetryLog =
       new MockDiagnosticClientNotifierWithTelemetryLog
     withServer[Assertion](buildServer(diagnosticClientNotifier)) { server =>

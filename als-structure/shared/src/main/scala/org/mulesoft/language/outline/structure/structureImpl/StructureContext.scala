@@ -1,12 +1,16 @@
 package org.mulesoft.language.outline.structure.structureImpl
 
 import amf.core.model.document.BaseUnit
+import amf.plugins.document.vocabularies.DialectsRegistry
 import amf.plugins.document.vocabularies.model.document.Dialect
 import org.mulesoft.amfintegration.AmfImplicits.BaseUnitImp
 
-class StructureContext(val location: String, val factory: BuilderFactory, val dialect: Dialect) {}
+class StructureContext(val location: String,
+                       val factory: BuilderFactory,
+                       val dialect: Dialect,
+                       val registry: DialectsRegistry) {}
 
-private class StructureContextBuilder(unit: BaseUnit) {
+private class StructureContextBuilder(unit: BaseUnit, registry: DialectsRegistry) {
   private var factory: BuilderFactory = _
   private var d: Dialect              = _
 
@@ -20,5 +24,5 @@ private class StructureContextBuilder(unit: BaseUnit) {
     this
   }
 
-  def build(): StructureContext = new StructureContext(unit.identifier, factory, d)
+  def build(): StructureContext = new StructureContext(unit.identifier, factory, d, registry)
 }
