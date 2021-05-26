@@ -27,7 +27,7 @@ documentChanges:
           "definitions": {
             "schema": {
               "example": {
-                "$ref": "aux/example.json"
+                "$ref": "aux-folder/example.json"
               },
               "type": "object",
               "additionalProperties": true,

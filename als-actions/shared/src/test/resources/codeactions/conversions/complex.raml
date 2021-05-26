@@ -8,7 +8,7 @@ types:
       example:
         prop: this is an example
   Person:
-    type: !include aux/person.json
+    type: !include aux-folder/person.json
     description: my schema
   Board:
     properties:
@@ -24,7 +24,7 @@ types:
             properties:
               aString: string
               myObject: A
-            example: !include aux/example.json
+            example: !include aux-folder/example.json
     body:
       application/json:
         type: object
@@ -33,7 +33,7 @@ types:
             type: object
             properties:
               min:
-                type: !include aux/mySchema.json
+                type: !include aux-folder/mySchema.json
               max: number
             example:
               max: 9
