@@ -8,7 +8,6 @@ import org.mulesoft.als.common.{MarkerFinderTest, PlatformDirectoryResolver}
 import org.mulesoft.als.configuration.AlsConfiguration
 import org.mulesoft.als.suggestions.client.Suggestions
 import org.mulesoft.als.suggestions.interfaces.Syntax.YAML
-import org.mulesoft.als.suggestions.patcher.{ContentPatcher, PatchedContent}
 import org.mulesoft.amfintegration.AmfInstance
 import org.mulesoft.lsp.feature.completion.CompletionItem
 import org.scalatest.{Assertion, AsyncFunSuite}
@@ -27,16 +26,16 @@ trait CoreTest extends AsyncFunSuite with PlatformSecrets with MarkerFinderTest 
     val url = filePath(path)
     for {
       content <- platform.resolve(url)
-      (env, position) <- Future.successful {
+      (env, marker) <- Future.successful {
         val fileContentsStr = content.stream.toString
         val markerInfo      = this.findMarker(fileContentsStr, "*")
 
-        (this.buildEnvironment(url, markerInfo.content, content.mime), markerInfo.offset)
+        (this.buildEnvironment(url, markerInfo.content, content.mime), markerInfo)
       }
       suggestions <- {
         new Suggestions(platform, env, AlsConfiguration(), new PlatformDirectoryResolver(platform), amfInstance)
           .initialized()
-          .suggest(url, position, snippetsSupport = true, None)
+          .suggest(url, marker.offset, snippetsSupport = true, marker.content, None)
       }
     } yield suggestions
   }

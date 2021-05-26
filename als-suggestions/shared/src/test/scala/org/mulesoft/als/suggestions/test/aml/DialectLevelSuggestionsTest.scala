@@ -10,7 +10,6 @@ import amf.plugins.document.vocabularies.model.domain.{DocumentMapping, NodeMapp
 import org.mulesoft.als.common.PlatformDirectoryResolver
 import org.mulesoft.als.configuration.AlsConfiguration
 import org.mulesoft.als.suggestions.client.Suggestions
-import org.mulesoft.als.suggestions.patcher.PatchedContent
 import org.mulesoft.als.suggestions.test.SuggestionsTest
 
 import scala.concurrent.Future

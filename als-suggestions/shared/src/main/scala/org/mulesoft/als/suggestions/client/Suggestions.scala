@@ -2,32 +2,23 @@ package org.mulesoft.als.suggestions.client
 
 import amf.core.model.document.BaseUnit
 import amf.core.parser.{Position => AmfPosition}
-import amf.core.registries.AMFPluginsRegistry
-import amf.core.remote.{Aml, AsyncApi, AsyncApi20, Oas, Oas20, Oas30, Platform, Raml, Raml08, Raml10}
+import amf.core.remote._
 import amf.core.unsafe.PlatformSecrets
 import amf.internal.environment.Environment
 import amf.plugins.document.vocabularies.model.document.Dialect
 import org.mulesoft.als.common.dtoTypes.{Position => DtoPosition}
-import org.mulesoft.als.common.{DirectoryResolver, EnvironmentPatcher, PlatformDirectoryResolver}
+import org.mulesoft.als.common.{DirectoryResolver, PlatformDirectoryResolver}
 import org.mulesoft.als.configuration.{AlsConfiguration, AlsConfigurationReader}
 import org.mulesoft.als.suggestions._
+import org.mulesoft.als.suggestions.aml.webapi._
 import org.mulesoft.als.suggestions.aml.{
   AmlCompletionRequestBuilder,
   MetaDialectPluginRegistry,
   VocabularyDialectPluginRegistry
 }
-import org.mulesoft.als.suggestions.aml.webapi.{
-  AsyncApiCompletionPluginRegistry,
-  Oas20CompletionPluginRegistry,
-  Oas30CompletionPluginRegistry,
-  Raml08CompletionPluginRegistry,
-  RamlCompletionPluginRegistry
-}
-import org.mulesoft.als.suggestions.interfaces.Syntax._
-import org.mulesoft.als.suggestions.interfaces.{CompletionProvider, EmptyCompletionProvider, Syntax}
-import org.mulesoft.als.suggestions.patcher.{ContentPatcher, PatchedContent}
+import org.mulesoft.als.suggestions.interfaces.CompletionProvider
 import org.mulesoft.amfintegration.dialect.dialects.ExternalFragmentDialect
-import org.mulesoft.amfintegration.{AmfInstance, AmfParseResult, InitOptions}
+import org.mulesoft.amfintegration.{AmfInstance, InitOptions}
 import org.mulesoft.lsp.feature.completion.CompletionItem
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -37,8 +28,7 @@ class Suggestions(platform: Platform,
                   environment: Environment,
                   configuration: AlsConfigurationReader,
                   directoryResolver: DirectoryResolver,
-                  amfInstance: AmfInstance)
-    extends SuggestionsHelper {
+                  amfInstance: AmfInstance) {
 
   // header plugin static?
   val completionsPluginHandler = new CompletionsPluginHandler()
@@ -67,58 +57,52 @@ class Suggestions(platform: Platform,
   def suggest(url: String,
               position: Int,
               snippetsSupport: Boolean,
+              originalText: String,
               rootLocation: Option[String]): Future[Seq[CompletionItem]] = {
-
-    platform
-      .fetchContent(url, amfInstance.amfConfiguration.withResourceLoaders(environment.loaders.toList))
-      .map(content => {
-        val originalContent = content.stream.toString
-        val (patched, patchedEnv) =
-          patchContentInEnvironment(environment, url, originalContent, position)
-        (patched, patchedEnv)
-      })
-      .flatMap {
-        case (patchedContent, patchedEnv) =>
-          suggestWithPatchedEnvironment(url, patchedContent, position, patchedEnv, snippetsSupport, rootLocation)
-      }
+    buildProviderAsync(
+      amfInstance
+        .modelBuilder()
+        .parse(url, environment)
+        .map(pr => (pr.baseUnit, pr.definedBy)), // todo: this should receive workspace and get last unit
+      originalText,
+      position,
+      url,
+      snippetsSupport,
+      rootLocation
+    ).flatMap(_.suggest())
   }
 
-  def buildProvider(result: AmfParseResult,
+  def buildProvider(result: (BaseUnit, Dialect),
                     position: Int,
                     url: String,
-                    patchedContent: PatchedContent,
+                    originalText: String,
                     snippetSupport: Boolean,
                     rootLocation: Option[String]): CompletionProvider = {
-    result.definedBy match {
-      case ExternalFragmentDialect.dialect if isHeader(position, patchedContent.original) =>
+    result._2 match {
+      case ExternalFragmentDialect.dialect if isHeader(position, originalText) =>
         if (!url.toLowerCase().endsWith(".raml"))
           HeaderCompletionProviderBuilder
-            .build(url,
-                   patchedContent.original,
-                   DtoPosition(position, patchedContent.original),
-                   amfInstance,
-                   configuration)
+            .build(url, originalText, DtoPosition(position, originalText), amfInstance, configuration)
         else
           RamlHeaderCompletionProvider
-            .build(url, patchedContent.original, DtoPosition(position, patchedContent.original))
+            .build(url, originalText, DtoPosition(position, originalText))
       case _ =>
-        buildCompletionProviderAST(result.baseUnit,
-                                   result.definedBy,
-                                   DtoPosition(position, patchedContent.original),
-                                   patchedContent,
+        buildCompletionProviderAST(result._1,
+                                   result._2,
+                                   DtoPosition(position, originalText),
                                    snippetSupport,
                                    rootLocation)
     }
   }
 
-  def buildProviderAsync(unitFuture: Future[AmfParseResult],
+  def buildProviderAsync(unitFuture: Future[(BaseUnit, Dialect)],
+                         originalText: String,
                          position: Int,
                          url: String,
-                         patchedContent: PatchedContent,
                          snippetSupport: Boolean,
                          rootLocation: Option[String]): Future[CompletionProvider] = {
     unitFuture
-      .map(buildProvider(_, position, url, patchedContent, snippetSupport, rootLocation))
+      .map(buildProvider(_, position, url, originalText, snippetSupport, rootLocation))
   }
 
   private def isHeader(position: Int, originalContent: String): Boolean =
@@ -127,26 +111,9 @@ class Suggestions(platform: Platform,
       .replaceAll("^\\{?\\s+", "")
       .contains('\n')
 
-  private def suggestWithPatchedEnvironment(url: String,
-                                            patchedContent: PatchedContent,
-                                            position: Int,
-                                            environment: Environment,
-                                            snippetsSupport: Boolean,
-                                            rootLocation: Option[String]): Future[Seq[CompletionItem]] = {
-
-    buildProviderAsync(amfInstance.modelBuilder().parse(url, environment),
-                       position,
-                       url,
-                       patchedContent,
-                       snippetsSupport,
-                       rootLocation)
-      .flatMap(_.suggest())
-  }
-
   private def buildCompletionProviderAST(bu: BaseUnit,
                                          dialect: Dialect,
                                          pos: DtoPosition,
-                                         patchedContent: PatchedContent,
                                          snippetSupport: Boolean,
                                          rootLocation: Option[String]): CompletionProviderAST = {
 
@@ -160,7 +127,7 @@ class Suggestions(platform: Platform,
           environment,
           directoryResolver,
           platform,
-          patchedContent,
+          bu.raw.getOrElse(""),
           snippetSupport,
           rootLocation,
           configuration,
@@ -177,29 +144,4 @@ object Suggestions extends PlatformSecrets {
                     AlsConfiguration(),
                     new PlatformDirectoryResolver(platform),
                     AmfInstance.default)
-}
-
-trait SuggestionsHelper {
-
-  def amfParse(url: String, amfInstance: AmfInstance, environment: Environment): Future[BaseUnit] =
-    amfInstance.modelBuilder().parse(url, environment).map(_.baseUnit)
-
-  def getMediaType(originalContent: String): Syntax = {
-
-    val trimmed = originalContent.trim
-    if (trimmed.startsWith("{") || trimmed.startsWith("[")) Syntax.JSON
-    else Syntax.YAML
-  }
-
-  def patchContentInEnvironment(environment: Environment,
-                                fileUrl: String,
-                                fileContentsStr: String,
-                                position: Int): (PatchedContent, Environment) = {
-
-    val patchedContent = ContentPatcher(fileContentsStr, position, YAML).prepareContent()
-    val envWithOverride =
-      EnvironmentPatcher.patch(environment, fileUrl, patchedContent.content)
-
-    (patchedContent, envWithOverride)
-  }
 }

@@ -38,11 +38,6 @@ trait SuggestionRender {
         if (params.yPartBranch.isKey) {
           params.yPartBranch.parentEntry
             .map(_.range)
-            .map(
-              r =>
-                if (r.lineTo == r.lineFrom)
-                  r.copy(columnTo = r.columnTo - params.patchedContent.addedTokens.foldLeft(0)((a, t) => a + t.size))
-                else r)
             .orElse(Some(n.range))
             .map(PositionRange(_))
         } else Some(PositionRange(n.range))

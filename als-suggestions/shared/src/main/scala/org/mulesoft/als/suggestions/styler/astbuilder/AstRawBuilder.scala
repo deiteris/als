@@ -2,6 +2,7 @@ package org.mulesoft.als.suggestions.styler.astbuilder
 
 import org.mulesoft.als.common.YPartBranch
 import org.mulesoft.als.suggestions.{BoolScalarRange, NumberScalarRange, RawSuggestion, SuggestionStructure}
+import org.mulesoft.amfintegration.VirtualYPart
 import org.mulesoft.lexer.SourceLocation
 import org.yaml.model._
 

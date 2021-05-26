@@ -39,11 +39,11 @@ class BasicCoreTestsAML extends CoreTest with DummyPlugins {
         val url = filePath("visit01.yaml")
         for {
           content <- platform.resolve(url)
-          (env, offset) <- Future.successful {
+          (env, marker) <- Future.successful {
             val fileContentsStr = content.stream.toString
             val markerInfo      = this.findMarker(fileContentsStr)
 
-            (this.buildEnvironment(url, markerInfo.content, content.mime), markerInfo.offset)
+            (this.buildEnvironment(url, markerInfo.content, content.mime), markerInfo)
           }
           suggestions <- {
             val suggestions = new Suggestions(platform,
@@ -56,7 +56,7 @@ class BasicCoreTestsAML extends CoreTest with DummyPlugins {
             suggestions.completionsPluginHandler
               .registerPlugins(Seq(DummyCompletionPlugin(), DummyInvalidCompletionPlugin()), dialect.id)
 
-            suggestions.suggest(url, offset, snippetsSupport = true, None)
+            suggestions.suggest(url, marker.offset, snippetsSupport = true, marker.content, None)
           }
         } yield suggestions
       }

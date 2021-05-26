@@ -11,7 +11,6 @@ import org.mulesoft.als.server.textsync.{TextDocument, TextDocumentContainer}
 import org.mulesoft.als.server.workspace.WorkspaceManager
 import org.mulesoft.als.suggestions.client.Suggestions
 import org.mulesoft.als.suggestions.interfaces.{CompletionProvider, Syntax}
-import org.mulesoft.als.suggestions.patcher.{ContentPatcher, PatchedContent}
 import org.mulesoft.lsp.ConfigType
 import org.mulesoft.lsp.feature.TelemeteredRequestHandler
 import org.mulesoft.lsp.feature.completion._
@@ -98,13 +97,10 @@ class SuggestionsManager(val editorEnvironment: TextDocumentContainer,
         val syntax       = Syntax(textDocument.syntax)
         val originalText = textDocument.text
         val offset       = position.offset(originalText)
-        val patchedContent =
-          ContentPatcher(originalText, offset, syntax).prepareContent()
         buildCompletionProviderAST(
-          TextDocument(uri, textDocument.version, patchedContent.content, syntax.toString),
+          TextDocument(uri, textDocument.version, originalText, syntax.toString),
           uri,
           offset,
-          patchedContent,
           telemetryUUID
         ).flatMap(provider => {
           provider
@@ -117,26 +113,17 @@ class SuggestionsManager(val editorEnvironment: TextDocumentContainer,
   def buildCompletionProviderAST(text: TextDocument,
                                  uri: String,
                                  position: Int,
-                                 patchedContent: PatchedContent,
                                  uuid: String): Future[CompletionProvider] =
     workspace
       .getProjectRootOf(uri)
       .flatMap(
         rootUri =>
           suggestions.buildProviderAsync(
-            patchedParse(text, uri, position, patchedContent, uuid),
+            workspace.getLastUnit(uri, uuid).map(cu => (cu.unit, cu.definedBy)),
+            text.text,
             position,
             uri,
-            patchedContent,
             snippetSupport,
             rootUri
         ))
-
-  private def patchedParse(text: TextDocument,
-                           uri: String,
-                           position: Int,
-                           patchedContent: PatchedContent,
-                           uuid: String) =
-    new TelemeteredPatchedParse(telemetryProvider)
-      .run(PatchedParseParams(text, uri, position, patchedContent, editorEnvironment, workspace, uuid))
 }

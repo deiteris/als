@@ -2,6 +2,7 @@ package org.mulesoft.als.suggestions.styler
 
 import org.mulesoft.als.common.YPartBranch
 import org.mulesoft.als.suggestions.styler.astbuilder.AstRawBuilder
+import org.yaml.model.{DoubleQuoteMark, ScalarMark, SingleQuoteMark}
 
 trait FlowSuggestionRender extends SuggestionRender {
 

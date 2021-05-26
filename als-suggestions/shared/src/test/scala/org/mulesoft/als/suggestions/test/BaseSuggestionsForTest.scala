@@ -48,7 +48,7 @@ trait BaseSuggestionsForTest extends PlatformSecrets with MarkerFinderTest {
           new Suggestions(platform, environment, AlsConfiguration(), dr, instance).initialized()
         }
       }
-      suggestions <- s.suggest(url, position, snippetsSupport = true, None)
+      suggestions <- s.suggest(url, position, snippetsSupport = true, markerInfo.content, None)
     } yield suggestions
   }
 

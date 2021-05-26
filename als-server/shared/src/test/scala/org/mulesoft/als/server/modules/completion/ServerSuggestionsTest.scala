@@ -1,14 +1,11 @@
 package org.mulesoft.als.server.modules.completion
 
 import org.mulesoft.als.common.{MarkerFinderTest, MarkerInfo}
-import org.mulesoft.als.common.dtoTypes.Position
-import org.mulesoft.als.server.protocol.LanguageServer
-import org.mulesoft.als.server.modules.WorkspaceManagerFactoryBuilder
-import org.mulesoft.als.server.{LanguageServerBaseTest, LanguageServerBuilder, MockDiagnosticClientNotifier}
-import org.mulesoft.als.suggestions.interfaces.Syntax.YAML
-import org.mulesoft.als.suggestions.patcher.{ContentPatcher, PatchedContent}
-import org.mulesoft.lsp.feature.common.TextDocumentIdentifier
 import org.mulesoft.als.convert.LspRangeConverter
+import org.mulesoft.als.server.modules.WorkspaceManagerFactoryBuilder
+import org.mulesoft.als.server.protocol.LanguageServer
+import org.mulesoft.als.server.{LanguageServerBaseTest, LanguageServerBuilder, MockDiagnosticClientNotifier}
+import org.mulesoft.lsp.feature.common.TextDocumentIdentifier
 import org.mulesoft.lsp.feature.completion.{CompletionItem, CompletionParams, CompletionRequestType}
 import org.scalatest.{Assertion, EitherValues}
 

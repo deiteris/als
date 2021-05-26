@@ -1,12 +1,10 @@
 package org.mulesoft.als.server.modules.reference
 
 import org.mulesoft.als.common.{MarkerFinderTest, MarkerInfo}
-import org.mulesoft.als.common.dtoTypes.Position
 import org.mulesoft.als.convert.LspRangeConverter
 import org.mulesoft.als.server.modules.WorkspaceManagerFactoryBuilder
 import org.mulesoft.als.server.protocol.LanguageServer
 import org.mulesoft.als.server.{LanguageServerBuilder, MockTelemetryParsingClientNotifier, ServerWithMarkerTest}
-import org.mulesoft.als.suggestions.patcher.PatchedContent
 import org.mulesoft.lsp.feature.common.{Location, TextDocumentIdentifier}
 import org.mulesoft.lsp.feature.implementation.{ImplementationParams, ImplementationRequestType}
 import org.scalatest.Assertion
