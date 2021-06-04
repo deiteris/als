@@ -72,8 +72,7 @@ case class YPartBranch(node: YPart, position: AmfPosition, stack: Seq[YPart], is
   val isAtRoot: Boolean = node.isInstanceOf[model.YDocument] || (stack.count(_.isInstanceOf[YMap]) == 0 && node
     .isInstanceOf[YMap]) ||
     (stack.count(_.isInstanceOf[YMap]) <= 1 &&
-      (parentEntry.exists(_.key.range.contains(position)) || // this is the case that you are in a key on root level (before colon)
-        isJson))
+      parentEntry.exists(_.key.range.contains(position))) // this is the case that you are in a key on root level (before colon)
 
   val isArray: Boolean = node.isArray
   lazy val isInArray: Boolean =

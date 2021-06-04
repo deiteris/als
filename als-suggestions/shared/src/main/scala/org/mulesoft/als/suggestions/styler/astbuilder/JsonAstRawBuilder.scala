@@ -14,10 +14,9 @@ class JsonAstRawBuilder(val raw: RawSuggestion, val isSnippet: Boolean, val yPar
                             isSnippet,
                             YPartBranch(YMap.empty, AmfPosition.ZERO, Nil, isJson = true, isInFlow = true))
 
-  override def ast: YPart = {
+  override def ast: YPart =
     if (raw.options.isKey) emitRootKey
     else value(raw.newText, raw.options)
-  }
 
   override def emitEntryValue(options: SuggestionStructure): YNode = {
     snippet = true

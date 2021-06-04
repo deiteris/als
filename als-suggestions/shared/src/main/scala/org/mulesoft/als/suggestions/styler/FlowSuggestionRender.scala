@@ -2,7 +2,6 @@ package org.mulesoft.als.suggestions.styler
 
 import org.mulesoft.als.common.YPartBranch
 import org.mulesoft.als.suggestions.styler.astbuilder.AstRawBuilder
-import org.yaml.model.{DoubleQuoteMark, ScalarMark, SingleQuoteMark}
 
 trait FlowSuggestionRender extends SuggestionRender {
 
@@ -38,14 +37,13 @@ trait FlowSuggestionRender extends SuggestionRender {
 
     private def shouldEmitPosition: Boolean = !builder.asSnippet
 
-    private def collectionSeparator(s: String): String = {
-      if (isFlow && hasBrotherAfterwards(params.yPartBranch)) {
+    private def collectionSeparator(s: String): String =
+      if (isFlow && hasBrotherAfterwards(params.yPartBranch))
         (if (shouldEmitPosition) {
            builder.forSnippet()
            s + " " + cursorPosition
          } else s) + ","
-      } else s
-    }
+      else s
 
     private def hasBrotherAfterwards(yPartBranch: YPartBranch): Boolean = {
       val range = yPartBranch.node.range

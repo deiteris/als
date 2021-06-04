@@ -16,7 +16,7 @@ trait SuggestionRender {
   lazy val initialIndentationSize: Int = params.indentation / 2
   lazy val tabSize: Int                = params.formattingConfiguration.indentationSize
 
-  def patchPath(builder: CompletionItemBuilder): Unit = {
+  def patchPath(builder: CompletionItemBuilder): Unit =
     if (!isHeaderSuggestion) {
       val index =
         params.prefix.lastIndexOf(".").max(params.prefix.lastIndexOf("/"))
@@ -28,18 +28,21 @@ trait SuggestionRender {
           builder
             .withDisplayText(builder.getDisplayText.substring(index + 1))
     }
-  }
 
   private def isHeaderSuggestion: Boolean = params.position.line == 0 && params.prefix.startsWith("#%")
 
   private def keyRange: Option[PositionRange] =
     params.yPartBranch.node match {
-      case n: YNode if n.value.isInstanceOf[YScalar] && params.yPartBranch.isJson =>
+      case n: YNode if n.value.isInstanceOf[YScalar] =>
         if (params.yPartBranch.isKey) {
-          params.yPartBranch.parentEntry
-            .map(_.range)
-            .orElse(Some(n.range))
-            .map(PositionRange(_))
+//          params.yPartBranch.parentEntry
+//            .map(_.range)
+//            .map( // here check if it has quotes
+//              r =>
+//                if (r.lineTo == r.lineFrom)
+//                  r.copy(columnTo = r.columnTo - params.patchedContent.addedTokens.foldLeft(0)((a, t) => a + t.size))
+//                else r)
+          Some(PositionRange(n.as[YScalar].range))
         } else Some(PositionRange(n.range))
       case _ => None
     }

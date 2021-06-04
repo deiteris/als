@@ -32,6 +32,25 @@ case class YamlSuggestionStyler(override val params: StylerParams) extends FlowS
     else YamlRender
   }
 
+  /* here check to preserve tokens
+  override def style(raw: RawSuggestion): Styled = super.style(fixTokens(raw))
+
+  private def fixTokens(raw: RawSuggestion): RawSuggestion =
+    if (hasAddedQuotes)
+      raw
+        .withPositionRange(Some(innerSuggestionRange(raw)))
+        .withStringKey
+    else raw
+
+  private def hasAddedQuotes =
+    params.patchedContent.addedTokens.contains(QuoteToken)
+
+  private def innerSuggestionRange(raw: RawSuggestion): PositionRange =
+    if (hasAddedQuotes && raw.options.keyRange != StringScalarRange) { // it has added quotes, and was not originally a string
+      val range = suggestionRange(raw)
+      PositionRange(range.start.moveColumn(-1), range.end.moveColumn(1))
+    } else suggestionRange(raw)
+   */
   override def astBuilder: RawSuggestion => AstRawBuilder =
     (raw: RawSuggestion) => new YamlAstRawBuilder(raw, false, params.yPartBranch)
 }

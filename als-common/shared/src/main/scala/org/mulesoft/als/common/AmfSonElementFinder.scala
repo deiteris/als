@@ -127,7 +127,8 @@ object AmfSonElementFinder {
           fe.value.value match {
             case e: AmfArray =>
               val objects = nextObject(e)
-              if (objects.isEmpty) buildFromMeta(parent, fe, e).toSeq
+              if (objects.isEmpty)
+                buildFromMeta(parent, fe, e).toSeq
               else objects
             case o: AmfObject if o.containsPosition(amfPosition) || o.annotations.isVirtual =>
               Seq(o)

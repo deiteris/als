@@ -1,13 +1,12 @@
 package org.mulesoft.als.suggestions.plugins.aml
 
-import amf.core.remote.Vendor
 import amf.plugins.document.vocabularies.plugin.ReferenceStyles
 import org.mulesoft.als.common.SemanticNamedElement._
 import org.mulesoft.als.common.YPartBranch
-import org.mulesoft.als.suggestions.{PlainText, RawSuggestion, SuggestionStructure}
 import org.mulesoft.als.suggestions.aml.AmlCompletionRequest
 import org.mulesoft.als.suggestions.interfaces.AMLCompletionPlugin
 import org.mulesoft.als.suggestions.plugins.NonPatchHacks
+import org.mulesoft.als.suggestions.{PlainText, RawSuggestion, SuggestionStructure}
 import org.mulesoft.amfintegration.AmfImplicits._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -60,19 +59,13 @@ trait AMLRefTagCompletionPlugin extends AMLCompletionPlugin with NonPatchHacks {
       !isExceptionCase(params.yPartBranch)
 
   private def matchPrefixPatched(params: AmlCompletionRequest) =
-    params.yPartBranch.stringValue.isEmpty || params.yPartBranch.isArray || isPatchedKey(params.yPartBranch) || params.yPartBranch.stringValue
+    params.yPartBranch.stringValue.isEmpty || params.yPartBranch.isArray || params.yPartBranch.stringValue
       .startsWith("$")
 
-  private def isInFacet(params: AmlCompletionRequest): Boolean = isKeyAlone(params) || isPatchedJson(params)
+  private def isInFacet(params: AmlCompletionRequest): Boolean = isKeyAlone(params)
 
   private def isKeyAlone(params: AmlCompletionRequest): Boolean =
     params.fieldEntry.isEmpty && notValue(params.yPartBranch)
-
-  private def isPatchedJson(params: AmlCompletionRequest): Boolean =
-    params.yPartBranch.isJson && params.yPartBranch.isInArray
-
-  private def isPatchedKey(yPartBranch: YPartBranch): Boolean =
-    yPartBranch.isJson && yPartBranch.stringValue == "x"
 
   protected def isExceptionCase(branch: YPartBranch): Boolean = false
 }
