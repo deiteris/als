@@ -66,3 +66,7 @@ object ParserDiagnosticKind extends DiagnosticManagerKind {
 object ResolutionDiagnosticKind extends DiagnosticManagerKind {
   override val name: String = "resolution"
 }
+
+object CustomValidationDiagnosticKind extends DiagnosticManagerKind {
+  override val name: String = "custom"
+}

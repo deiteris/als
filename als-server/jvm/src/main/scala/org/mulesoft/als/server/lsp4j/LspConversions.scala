@@ -5,6 +5,7 @@ import org.eclipse.lsp4j
 import org.eclipse.lsp4j.jsonrpc.messages.{Either => JEither}
 import org.mulesoft.als.configuration.{AlsConfiguration, TemplateTypes}
 import org.mulesoft.als.server.feature.configuration.UpdateConfigurationParams
+import org.mulesoft.als.server.feature.customvalidation.RegisterProfileParams
 import org.mulesoft.als.server.feature.diagnostic.{CleanDiagnosticTreeClientCapabilities, CleanDiagnosticTreeParams}
 import org.mulesoft.als.server.feature.fileusage.FileUsageClientCapabilities
 import org.mulesoft.als.server.feature.renamefile.{RenameFileActionClientCapabilities, RenameFileActionParams}
@@ -173,4 +174,7 @@ object LspConversions {
 
   implicit def jvmRenameFileActionParams(params: extension.RenameFileActionParams): RenameFileActionParams =
     RenameFileActionParams(params.getOldDocument, params.getNewDocument)
+
+  implicit def jvmRegisterProfileParams(params: extension.RegisterProfileParams): RegisterProfileParams =
+    RegisterProfileParams(params.getTextDocument)
 }

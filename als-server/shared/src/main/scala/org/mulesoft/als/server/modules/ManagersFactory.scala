@@ -14,6 +14,7 @@ import org.mulesoft.als.server.modules.actions.rename.RenameManager
 import org.mulesoft.als.server.modules.ast.{AccessUnits, BaseUnitListener, ResolvedUnitListener}
 import org.mulesoft.als.server.modules.completion.SuggestionsManager
 import org.mulesoft.als.server.modules.configuration.ConfigurationManager
+import org.mulesoft.als.server.modules.customvalidation.RegisterProfileManager
 import org.mulesoft.als.server.modules.diagnostic._
 import org.mulesoft.als.server.modules.serialization.{ConversionManager, SerializationManager}
 import org.mulesoft.als.server.modules.structure.StructureManager
@@ -67,12 +68,22 @@ class WorkspaceManagerFactoryBuilder(clientNotifier: ClientNotifier, logger: Log
     s
   }
 
+  val validationProfileRegister: RegisterProfileManager = new RegisterProfileManager(telemetryManager, amfConfig)
+
   def diagnosticManager(): Seq[DiagnosticManager] = {
     val gatherer = new ValidationGatherer(telemetryManager)
     val dm       = new ParseDiagnosticManager(telemetryManager, clientNotifier, logger, env, gatherer, notificationKind)
     val rdm      = new ResolutionDiagnosticManager(telemetryManager, clientNotifier, logger, env, gatherer)
+    val cpm = new CustomProfileDiagnosticManager(telemetryManager,
+                                                 clientNotifier,
+                                                 logger,
+                                                 env,
+                                                 gatherer,
+                                                 validationProfileRegister)
     resolutionDependencies += rdm
     projectDependencies += dm
+    projectDependencies += cpm
+    projectDependencies += validationProfileRegister
     Seq(dm, rdm)
   }
 

@@ -78,7 +78,9 @@ class LanguageServerFactory(clientNotifier: ClientNotifier) extends PlatformSecr
     val dm                    = factory.diagnosticManager()
     val sm                    = factory.serializationManager(serialization)
     val filesInProjectManager = factory.filesInProjectManager(serialization.alsClientNotifier)
-    val builders              = factory.buildWorkspaceManagerFactory()
+    val rpm                   = factory.validationProfileRegister
+
+    val builders = factory.buildWorkspaceManagerFactory()
 
     val languageBuilder =
       new LanguageServerBuilder(builders.documentManager,
@@ -89,6 +91,7 @@ class LanguageServerFactory(clientNotifier: ClientNotifier) extends PlatformSecr
         .addInitializableModule(sm)
         .addInitializableModule(filesInProjectManager)
         .addInitializable(builders.workspaceManager)
+        .addRequestModule(rpm)
         .addInitializable(builders.resolutionTaskManager)
         .addInitializable(builders.configurationManager)
         .addRequestModule(builders.cleanDiagnosticManager)

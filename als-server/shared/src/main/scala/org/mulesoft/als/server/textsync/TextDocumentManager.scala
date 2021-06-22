@@ -7,6 +7,7 @@ import org.mulesoft.als.server.modules.ast._
 import org.mulesoft.lsp.textsync.TextDocumentSyncKind.TextDocumentSyncKind
 import org.mulesoft.lsp.textsync._
 import org.mulesoft.als.common.URIImplicits._
+import org.mulesoft.lsp.feature.common.TextDocumentIdentifier
 
 import scala.concurrent.Future
 import scala.language.experimental.macros

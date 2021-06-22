@@ -2,7 +2,6 @@ package org.mulesoft.als.server.lsp4j
 
 import java.util
 import java.util.concurrent.CompletableFuture
-
 import org.eclipse.lsp4j
 import org.eclipse.lsp4j.jsonrpc.messages
 import org.eclipse.lsp4j.{
@@ -36,11 +35,13 @@ import org.eclipse.lsp4j.{
   RenameParams,
   SelectionRange,
   SymbolInformation,
+  TextDocumentIdentifier,
   TextEdit,
   TypeDefinitionParams,
   WorkspaceEdit
 }
 import org.mulesoft.als.server.custom.{CustomEvents, CustomTextDocumentService}
+import org.mulesoft.als.server.feature.customvalidation.RegisterProfileNotificationType
 import org.mulesoft.als.server.feature.diagnostic.CleanDiagnosticTreeRequestType
 import org.mulesoft.als.server.feature.fileusage.FileUsageRequestType
 import org.mulesoft.als.server.feature.renamefile.RenameFileActionRequestType
@@ -175,5 +176,9 @@ class TextDocumentServiceImpl(private val inner: LanguageServer) extends CustomT
 
   override def rangeFormatting(params: DocumentRangeFormattingParams): CompletableFuture[util.List[_ <: TextEdit]] = {
     javaFuture(resolveHandler(DocumentRangeFormattingRequestType)(params), lsp4JTextEdits)
+  }
+
+  override def registerProfile(params: RegisterProfileParams): Unit = {
+    javaFuture(resolveHandler(RegisterProfileNotificationType)(params), (a: Unit) => a)
   }
 }
