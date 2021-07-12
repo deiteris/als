@@ -36,7 +36,9 @@ const baseConfig = {
       fs: false,
       net: false,
       child_process: false,
-      crypto: false
+      crypto: false,
+      stream: false,
+      util: require.resolve("util/")
     }
   },
   plugins: [

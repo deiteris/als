@@ -32,7 +32,7 @@ class SerializationManager[S](telemetryProvider: TelemetryProvider,
 
   override val `type`: SerializationConfigType.type = SerializationConfigType
 
-  private def resolveAndSerialize(resolved: BaseUnit): Future[DocBuilder[S]] = {
+  def resolveAndSerialize(resolved: BaseUnit): Future[DocBuilder[S]] = {
     val value = props.newDocBuilder()
     ParserHelper.toJsonLD(resolved, value).map(_ => value)
   }

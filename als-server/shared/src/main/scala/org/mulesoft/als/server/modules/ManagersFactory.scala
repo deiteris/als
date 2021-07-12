@@ -67,11 +67,15 @@ class WorkspaceManagerFactoryBuilder(clientNotifier: ClientNotifier, logger: Log
     s
   }
 
-  def diagnosticManager(): Seq[DiagnosticManager] = {
-    val gatherer = new ValidationGatherer(telemetryManager)
-    val dm       = new ParseDiagnosticManager(telemetryManager, clientNotifier, logger, env, gatherer, notificationKind)
-    val rdm      = new ResolutionDiagnosticManager(telemetryManager, clientNotifier, logger, env, gatherer)
+  val gatherer = new ValidationGatherer(telemetryManager)
+  //todo: fix signature
+  def diagnosticManager(
+      customValidator: Option[DiagnosticManager with ResolvedUnitListener] = None): Seq[DiagnosticManager] = {
+
+    val dm  = new ParseDiagnosticManager(telemetryManager, clientNotifier, logger, env, gatherer, notificationKind)
+    val rdm = new ResolutionDiagnosticManager(telemetryManager, clientNotifier, logger, env, gatherer)
     resolutionDependencies += rdm
+    customValidator.map(cv => resolutionDependencies += cv)
     projectDependencies += dm
     Seq(dm, rdm)
   }

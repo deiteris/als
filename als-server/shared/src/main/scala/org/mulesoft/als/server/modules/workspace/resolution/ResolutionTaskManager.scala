@@ -57,7 +57,10 @@ class ResolutionTaskManager(telemetryProvider: TelemetryProvider,
     }
     logger.debug(s"Updating $uri unit", "ResolutionTaskManager", "processTask")
     repository.updateUnit(uri, resolvedInstance)
-    subscribers.foreach(_.onNewAst(resolvedInstance, uuid))
+    subscribers.foreach(s => {
+      println(s"Notify ${s}")
+      s.onNewAst(resolvedInstance, uuid)
+    })
   }
 
   override protected def toResult(uri: String, unit: AmfResolvedUnit): AmfResolvedUnit = unit
