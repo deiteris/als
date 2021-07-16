@@ -43,6 +43,11 @@ class RegisterProfileManager(telemetryProvider: TelemetryProvider, amfInstance: 
         s"Requested serialization for ${params.textDocument.uri}"
 
       override protected def uri(params: RegisterProfileParams): String = params.textDocument.uri
+
+      /**
+        * If Some(_), this will be sent as a response as a default for a managed exception
+        */
+      override protected val empty: Option[Unit] = None
     }
   )
 
@@ -56,7 +61,7 @@ class RegisterProfileManager(telemetryProvider: TelemetryProvider, amfInstance: 
     } yield {
       profile.unit match {
         case d: DialectInstance =>
-          val name = RuntimeValidator.loadValidationProfile(d)
+          val name = AMFValidatorPlugin.loadValidationProfileInstance(AMFValidatorPlugin.parseProfile(d))
           if (!profiles.contains(name)) profiles += name
         case _ => // ignore
 
@@ -78,8 +83,8 @@ class RegisterProfileManager(telemetryProvider: TelemetryProvider, amfInstance: 
   override def onNewAst(ast: BaseUnitListenerParams, uuid: String): Unit = {
     ast.parseResult.baseUnit match {
       case d: DialectInstance if AMFValidatorPlugin.isValProfile(d) =>
-        val profile = AMFValidatorPlugin.parseValProfile(d)
-        if (profiles.contains(profile.name)) RuntimeValidator.loadValidationProfileInstance(profile)
+        val profile = AMFValidatorPlugin.parseProfile(d)
+        if (profiles.contains(profile.name)) AMFValidatorPlugin.loadValidationProfileInstance(profile)
       case _ => // ignore
     }
   }

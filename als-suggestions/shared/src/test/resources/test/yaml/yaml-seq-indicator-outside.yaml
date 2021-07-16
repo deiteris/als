@@ -2,6 +2,13 @@ openapi: "3.0.0"
 info:
   title: asd
   version: 2
+
+key1:
+    *
+    prop1:
+key2:
+    props2: b
+    prop3: c
 paths:
   /get:
     get:

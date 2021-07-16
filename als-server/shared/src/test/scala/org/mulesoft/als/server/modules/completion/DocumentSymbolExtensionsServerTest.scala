@@ -33,7 +33,7 @@ class DocumentSymbolExtensionsServerTest extends LanguageServerBaseTest with Fil
       .build()
   }
 
-  test("Test semantic Extensions outline") {
+  ignore("Test semantic Extensions outline") {
     runTest("api.raml")
   }
 

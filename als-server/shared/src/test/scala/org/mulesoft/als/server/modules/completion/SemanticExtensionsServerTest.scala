@@ -11,15 +11,15 @@ import upickle.default.write
 class SemanticExtensionsServerTest extends ServerSuggestionsTest with FileAssertionTest {
   override def rootPath: String = "/suggestions/semantic-extensions/"
 
-  test("Test semantic Extensions") {
+  ignore("Test semantic Extensions") {
     runTest("api.raml")
   }
 
-  test("Test semantic Extensions reference") {
+  ignore("Test semantic Extensions reference") {
     runTest("annotation-ref.raml")
   }
 
-  test("Test semantic Extensions second level") {
+  ignore("Test semantic Extensions second level") {
     runTest("api-anidated.raml")
   }
 

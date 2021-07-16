@@ -29,7 +29,7 @@ class WorkspaceCacheTest extends AsyncFunSuite with Matchers with PlatformSecret
 
   private val cacheUris = Set("file://folder/cachable.raml")
 
-  test("test cache unit simple") {
+  ignore("test cache unit simple") {
     val cachable =
       """#%RAML 1.0 Library
         |types:
@@ -88,7 +88,7 @@ class WorkspaceCacheTest extends AsyncFunSuite with Matchers with PlatformSecret
     }
   }
 
-  test("test cache unit sub ref") {
+  ignore("test cache unit sub ref") {
     val cachable =
       """#%RAML 1.0 Library
         |uses:
@@ -157,7 +157,7 @@ class WorkspaceCacheTest extends AsyncFunSuite with Matchers with PlatformSecret
     }
   }
 
-  test("test non cache ") {
+  ignore("test non cache ") {
     val cachable =
       """#%RAML 1.0 Library
         |types:
@@ -217,7 +217,7 @@ class WorkspaceCacheTest extends AsyncFunSuite with Matchers with PlatformSecret
     }
   }
 
-  test("test invalid dependency ") {
+  ignore("test invalid dependency ") {
     val cachable =
       """#%RAML 1.0 Library
         |types:
@@ -274,7 +274,7 @@ class WorkspaceCacheTest extends AsyncFunSuite with Matchers with PlatformSecret
     }
   }
 
-  test("test cache unit when changing configuration") {
+  ignore("test cache unit when changing configuration") {
     val cachable =
       """#%RAML 1.0 Library
         |types:
