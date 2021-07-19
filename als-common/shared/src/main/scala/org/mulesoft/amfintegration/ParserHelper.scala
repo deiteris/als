@@ -1,10 +1,11 @@
 package org.mulesoft.amfintegration
 
 import amf.client.commands.CommandHelper
+import amf.client.convert.CoreClientConverters.platform
 import amf.client.parse.DefaultParserErrorHandler
 import amf.client.remote.Content
 import amf.core.annotations.SourceVendor
-import amf.core.client.ParserConfig
+import amf.core.client.{ParserConfig, ParsingOptions}
 import amf.core.emitter.RenderOptions
 import amf.core.errorhandling.{ErrorCollector, UnhandledErrorHandler}
 import amf.core.model.document.{BaseUnit, EncodesModel}
@@ -15,7 +16,7 @@ import amf.core.services.{RuntimeCompiler, RuntimeResolver, RuntimeValidator}
 import amf.core.validation.{AMFValidationReport, AMFValidationResult}
 import amf.core.{AMFSerializer, CompilerContextBuilder}
 import amf.internal.environment.Environment
-import amf.internal.resource.ResourceLoader
+import amf.internal.resource.{ResourceLoader, StringResourceLoader}
 import amf.plugins.document.vocabularies.model.document.{Dialect, DialectInstanceUnit, DialectLibrary}
 import amf.{ProfileName, ProfileNames}
 import org.mulesoft.als.{CompilerResult, ModelBuilder}
@@ -58,6 +59,22 @@ class ParserHelper(val platform: Platform, amfInstance: AmfInstance)
       )
       .map(m => new AmfParseResult(m, eh, amfInstance.alsAmlPlugin.dialectFor(m).getOrElse(ExternalFragmentDialect())))
 
+  }
+
+  def parseString(content: String, env: Environment): Future[BaseUnit] = {
+    val url = "file:///fake/url/file.amf"
+    val environment = {
+      env.add(StringResourceLoader(platform.resolvePath(url), content))
+    }
+
+    RuntimeCompiler(
+      url,
+      Option("application/ld+json"),
+      Some("AMF Graph"),
+      Context(platform),
+      env = environment,
+      cache = Cache()
+    )
   }
 
   override def parse(url: String, env: Environment): Future[AmfParseResult] = {

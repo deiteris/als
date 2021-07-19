@@ -2,7 +2,10 @@ package org.mulesoft.als.server
 
 import amf.client.convert.ClientPayloadPluginConverter
 import amf.client.plugins.ClientAMFPayloadValidationPlugin
+import amf.client.remote.Content
 import amf.client.resource.ClientResourceLoader
+import amf.core.lexer.CharStream
+import amf.internal.resource.ResourceLoader
 import org.mulesoft.als.configuration.{
   ClientDirectoryResolver,
   DefaultJsServerSystemConf,
@@ -12,7 +15,7 @@ import org.mulesoft.als.configuration.{
 import org.mulesoft.als.server.client.{AlsClientNotifier, ClientNotifier}
 import org.mulesoft.als.server.logger.PrintLnLogger
 import org.mulesoft.als.server.modules.WorkspaceManagerFactoryBuilder
-import org.mulesoft.als.server.modules.diagnostic.DiagnosticNotificationsKind
+import org.mulesoft.als.server.modules.diagnostic.{DiagnosticNotificationsKind, JsCustomValidationDiagnosticManager}
 import org.mulesoft.als.server.protocol.LanguageServer
 import org.mulesoft.amfintegration.AmfInstance
 import org.yaml.builder.{DocBuilder, JsOutputBuilder}
@@ -61,11 +64,19 @@ object LanguageServerFactory {
 
     notificationKind.toOption.foreach(factory.withNotificationKind)
 
-    val dm                    = factory.diagnosticManager()
-    val sm                    = factory.serializationManager(serialization)
+    val sm = factory.serializationManager(serialization)
+    val customValidationManager =
+      new JsCustomValidationDiagnosticManager(factory.telemetryManager,
+                                              clientNotifier,
+                                              sharedLogger(logger),
+                                              jsServerSystemConf.environment,
+                                              factory.gatherer,
+                                              sm,
+                                              jsServerSystemConf.platform)
+    val dm                    = factory.diagnosticManager(Some(customValidationManager))
     val filesInProjectManager = factory.filesInProjectManager(serialization.alsClientNotifier)
     val builders              = factory.buildWorkspaceManagerFactory()
-
+    customValidationManager.withWorkspaceManager(builders.workspaceManager)
     val languageBuilder =
       new LanguageServerBuilder(builders.documentManager,
                                 builders.workspaceManager,
