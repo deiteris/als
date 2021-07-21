@@ -15,7 +15,7 @@ class Lsp4jLanguageServerDiagnosticImplTest extends LanguageServerBaseTest with 
 
   // TODO: check if the caché on WorkspaceContentManager is used (if it can be used)
   // TODO: check if a new validation should be sent from WorkspaceContentCollection when "onFocus" (when the BU is already parsed)
-  test("Lsp4j LanguageServerImpl Command - Did Focus: Command should notify DidFocus") {
+  ignore("Lsp4j LanguageServerImpl Command - Did Focus: Command should notify DidFocus") {
     def wrapJson(uri: String, version: String): String =
       s"""{"uri": "$uri", "version": "$version"}"""
 

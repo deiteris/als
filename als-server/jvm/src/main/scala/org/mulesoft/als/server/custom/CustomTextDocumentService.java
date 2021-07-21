@@ -7,6 +7,7 @@ import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 import org.eclipse.lsp4j.jsonrpc.services.JsonRequest;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.mulesoft.als.server.lsp4j.extension.*;
+import org.mulesoft.als.server.protocol.textsync.DidFocusParams;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -41,4 +42,9 @@ public interface CustomTextDocumentService extends TextDocumentService{
     @JsonNotification
     void registerProfile(RegisterProfileParams params);
 
+    @JsonNotification
+    void unregisterProfile(RegisterProfileParams params);
+
+    @JsonNotification
+    void didFocus(DidFocusParams params);
 }

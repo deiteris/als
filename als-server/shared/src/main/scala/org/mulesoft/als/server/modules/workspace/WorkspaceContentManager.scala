@@ -1,11 +1,9 @@
 package org.mulesoft.als.server.modules.workspace
 
-import amf.client.model.document.DialectInstance
 import amf.core.model.document.ExternalFragment
-
-import java.util.UUID
 import amf.core.remote.Platform
 import amf.internal.environment.Environment
+import amf.plugins.document.vocabularies.model.document.DialectInstance
 import org.mulesoft.als.common.URIImplicits._
 import org.mulesoft.als.server.logger.Logger
 import org.mulesoft.als.server.modules.ast._
@@ -20,6 +18,7 @@ import org.mulesoft.als.server.workspace.extract.{
 import org.mulesoft.amfintegration.AmfParseResult
 import org.mulesoft.lsp.feature.telemetry.{MessageTypes, TelemetryProvider}
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 

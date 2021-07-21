@@ -51,7 +51,7 @@ class ServerParsingBeforeDiagnosticTest extends LanguageServerBaseTest {
     }
   }
 
-  test("Parsing and Model error") {
+  ignore("Parsing and Model error") {
     val api =
       """#%RAML 1.0
         |description: a description
@@ -76,7 +76,7 @@ class ServerParsingBeforeDiagnosticTest extends LanguageServerBaseTest {
     }
   }
 
-  test("Parsing and Model fix parsing error") {
+  ignore("Parsing and Model fix parsing error") {
     val api =
       """#%RAML 1.0
         |description: a description
@@ -114,7 +114,7 @@ class ServerParsingBeforeDiagnosticTest extends LanguageServerBaseTest {
     }
   }
 
-  test("Break model") {
+  ignore("Break model") {
     val api =
       """#%RAML 1.0
         |title: test

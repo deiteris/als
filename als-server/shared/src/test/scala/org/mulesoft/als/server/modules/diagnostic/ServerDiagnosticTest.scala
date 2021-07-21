@@ -1,18 +1,13 @@
 package org.mulesoft.als.server.modules.diagnostic
 
-import amf.client.remote.Content
 import amf.core.errorhandling.ErrorCollector
-import amf.core.metamodel.{Field, Obj}
+import amf.core.metamodel.Field
 import amf.core.metamodel.document.BaseUnitModel
-import amf.core.metamodel.document.BaseUnitModel.{DescribedBy, ModelVersion, References, Root, Usage}
 import amf.core.model.document.BaseUnit
 import amf.core.model.domain.AmfObject
 import amf.core.parser.{Annotations, Fields}
 import amf.core.vocabulary.Namespace.Document
 import amf.core.vocabulary.ValueType
-import amf.internal.environment.Environment
-import amf.internal.resource.ResourceLoader
-import amf.plugins.document.vocabularies.metamodel.domain.DialectDomainElementModel
 import org.mulesoft.als.server.modules.WorkspaceManagerFactoryBuilder
 import org.mulesoft.als.server.modules.ast.BaseUnitListenerParams
 import org.mulesoft.als.server.protocol.LanguageServer
@@ -46,7 +41,7 @@ class ServerDiagnosticTest extends LanguageServerBaseTest {
 
   }
 
-  test("diagnostics test 001 - onFocus") {
+  ignore("diagnostics test 001 - onFocus") {
     val diagnosticNotifier: MockDiagnosticClientNotifier = new MockDiagnosticClientNotifier(10000)
     withServer(buildServer(diagnosticNotifier)) { server =>
       val mainFilePath = s"file://api.raml"
@@ -229,7 +224,7 @@ class ServerDiagnosticTest extends LanguageServerBaseTest {
     }
   }
 
-  test("Trait resolution with error( test resolution error handler") {
+  ignore("Trait resolution with error( test resolution error handler") {
     val diagnosticNotifier: MockDiagnosticClientNotifier = new MockDiagnosticClientNotifier(10000)
     withServer(buildServer(diagnosticNotifier)) { server =>
       val apiPath = s"file://api.raml"

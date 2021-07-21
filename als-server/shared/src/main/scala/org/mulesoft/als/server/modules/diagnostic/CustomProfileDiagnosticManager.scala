@@ -1,17 +1,17 @@
 package org.mulesoft.als.server.modules.diagnostic
 
+import amf.ProfileName
 import amf.core.services.RuntimeValidator
-import amf.core.validation.AMFValidationReport
-import org.mulesoft.als.server.client.ClientNotifier
-import org.mulesoft.als.server.logger.Logger
-import org.mulesoft.als.server.modules.ast.{BaseUnitListener, BaseUnitListenerParams, ResolvedUnitListener}
-import org.mulesoft.lsp.feature.telemetry.{MessageTypes, TelemetryProvider}
 import amf.internal.environment.Environment
 import amf.plugins.document.vocabularies.model.document.{Dialect, DialectInstance}
+import org.mulesoft.als.server.client.ClientNotifier
+import org.mulesoft.als.server.logger.Logger
+import org.mulesoft.als.server.modules.ast.{BaseUnitListener, BaseUnitListenerParams}
 import org.mulesoft.als.server.modules.customvalidation.RegisterProfileManager
-import org.mulesoft.amfintegration.AmfResolvedUnit
+import org.mulesoft.lsp.feature.telemetry.TelemetryProvider
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class CustomProfileDiagnosticManager(override protected val telemetryProvider: TelemetryProvider,
                                      override protected val clientNotifier: ClientNotifier,
@@ -30,19 +30,31 @@ class CustomProfileDiagnosticManager(override protected val telemetryProvider: T
     * @param uuid - telemetry UUID
     */
   override def onNewAst(ast: BaseUnitListenerParams, uuid: String): Unit = {
-    if (registry.profiles.nonEmpty && !(ast.parseResult.baseUnit.isInstanceOf[Dialect] || ast.parseResult.baseUnit
+    if (!(ast.parseResult.baseUnit.isInstanceOf[Dialect] || ast.parseResult.baseUnit
           .isInstanceOf[DialectInstance])) {
       val uri = ast.parseResult.location
 
-      RuntimeValidator(ast.parseResult.baseUnit, registry.profiles.head, resolved = false, env = env)
-        .map { vr =>
-          val report =
-            AMFValidationReport(vr.conforms, vr.model, vr.profile, vr.results ++ ast.parseResult.eh.getErrors)
-          validationGatherer
-            .indexNewReport(ErrorsWithTree(uri, report.results, Some(ast.parseResult.tree)), managerName, uuid)
-          notifyReport(uri, ast.parseResult.baseUnit, ast.diagnosticsBundle, managerName, registry.profiles.head)
-        }
+      validationGatherer
+        .indexNewReport(ErrorsWithTree(uri, ast.parseResult.eh.getErrors, Some(ast.parseResult.tree)),
+                        managerName,
+                        uuid)
 
+      Future
+        .sequence(registry.profiles.map(RuntimeValidator(ast.parseResult.baseUnit, _, resolved = false, env = env)))
+        .map { reports =>
+          val errors = reports.flatMap(_.results) ++ ast.parseResult.eh.getErrors
+          validationGatherer
+            .indexNewReport(ErrorsWithTree(uri, errors, Some(ast.parseResult.tree)), managerName, uuid)
+        }
+        .andThen {
+          case _ =>
+            notifyReport(
+              uri,
+              ast.parseResult.baseUnit,
+              ast.diagnosticsBundle,
+              managerName,
+              registry.profiles.headOption.getOrElse(ProfileName("DEFAULT"))) // not sure what this last profile is for
+        }
     }
   }
 
