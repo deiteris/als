@@ -15,6 +15,7 @@ import org.mulesoft.amfintegration.AmfImplicits.BaseUnitImp
 import org.mulesoft.amfintegration.{AmfInstance, AmfResolvedUnit, DiagnosticsBundle}
 import org.mulesoft.lsp.feature.telemetry.{MessageTypes, TelemetryProvider}
 import amf.client.parse.AmfGraphParser
+import amf.core.annotations.LexicalInformation
 import amf.core.model.document.BaseUnit
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -83,7 +84,7 @@ class JsCustomValidationDiagnosticManager(override protected val telemetryProvid
           serializedUnit <- serializationManager.resolveAndSerialize(unit)
           validationResults <- Future.sequence(config.validationProfiles.map(uri =>
             readFile(uri, platform, env).map(content => {
-              validator.validate(content, JSON.stringify(serializedUnit.result), debug = false)
+              processValidation(validator, content, serializedUnit.result, unit)
             })))
         } yield {
           validationResults.foreach(println)
@@ -94,6 +95,19 @@ class JsCustomValidationDiagnosticManager(override protected val telemetryProvid
         }
       })
       .getOrElse(Future.successful())
+  }
+
+  private def processValidation(validator: AMFValidator, content: String, serializedUnit: Any, unit: BaseUnit) = {
+    validator.validate(content, JSON.stringify(serializedUnit), debug = false).map { r =>
+      new OPAValidatorReportLoader().load(r.toString)
+    } map { report =>
+      report.copy(results = report.results.map { r =>
+        r.copy(
+          position = unit
+            .findById(r.targetNode)
+            .flatMap(d => d.annotations.find(classOf[LexicalInformation])))
+      })
+    }
   }
 
   protected def readFile(uri: String, platform: Platform, environment: Environment): Future[String] = {
