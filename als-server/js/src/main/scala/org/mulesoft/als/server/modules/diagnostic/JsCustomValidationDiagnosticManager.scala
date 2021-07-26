@@ -1,6 +1,6 @@
 package org.mulesoft.als.server.modules.diagnostic
 
-import amf.ProfileNames
+import amf.{ProfileName, ProfileNames}
 import amf.core.registries.AMFPluginsRegistry
 import amf.core.remote.{Platform, UnsupportedUrlScheme}
 import amf.internal.environment.Environment
@@ -15,8 +15,9 @@ import org.mulesoft.amfintegration.AmfImplicits.BaseUnitImp
 import org.mulesoft.amfintegration.{AmfInstance, AmfResolvedUnit, DiagnosticsBundle}
 import org.mulesoft.lsp.feature.telemetry.{MessageTypes, TelemetryProvider}
 import amf.client.parse.AmfGraphParser
-import amf.core.annotations.LexicalInformation
+import amf.core.annotations.{LexicalInformation, SourceLocation}
 import amf.core.model.document.BaseUnit
+import amf.core.validation.AMFValidationReport
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
@@ -69,6 +70,11 @@ class JsCustomValidationDiagnosticManager(override protected val telemetryProvid
     clientNotifier.notifyDiagnostic(AlsPublishDiagnosticsParams(uri, Nil, ProfileNames.AMF))
   }
 
+  private def tree(baseUnit: BaseUnit): Set[String] =
+    baseUnit.flatRefs
+      .map(bu => bu.location().getOrElse(bu.id))
+      .toSet + baseUnit.location().getOrElse(baseUnit.id)
+
   private def gatherValidationErrors(uri: String,
                                      resolved: AmfResolvedUnit,
                                      references: Map[String, DiagnosticsBundle],
@@ -82,12 +88,19 @@ class JsCustomValidationDiagnosticManager(override protected val telemetryProvid
           validator      <- AMFValidator()
           unit           <- resolved.resolvedUnit
           serializedUnit <- serializationManager.resolveAndSerialize(unit)
-          validationResults <- Future.sequence(config.validationProfiles.map(uri =>
+          reports <- Future.sequence(config.validationProfiles.map(uri =>
             readFile(uri, platform, env).map(content => {
               processValidation(validator, content, serializedUnit.result, unit)
             })))
         } yield {
-          validationResults.foreach(println)
+          val results = reports.flatMap { r =>
+            r.results
+          }
+          results.foreach(println)
+          validationGatherer
+            .indexNewReport(ErrorsWithTree(uri, results.toSeq, Some(tree(resolved.originalUnit))), managerName, uuid)
+          notifyReport(uri, resolved.originalUnit, references, managerName, ProfileName("CustomValidation"))
+
           val endTime = System.currentTimeMillis()
           this.logger.debug(s"It took ${endTime - startTime} milliseconds to validate with Go env",
                             "CustomValidationDiagnosticManager",
@@ -97,19 +110,30 @@ class JsCustomValidationDiagnosticManager(override protected val telemetryProvid
       .getOrElse(Future.successful())
   }
 
-  private def processValidation(validator: AMFValidator, content: String, serializedUnit: js.Any, unit: BaseUnit) = {
+  private def processValidation(validator: AMFValidator,
+                                content: String,
+                                serializedUnit: js.Any,
+                                unit: BaseUnit): AMFValidationReport = {
     val r = validator.validate(content, JSON.stringify(serializedUnit), debug = false)
     println("_________")
     println(r)
     println("_________")
     val report = new OPAValidatorReportLoader().load(r)
     println(report)
-    report.copy(results = report.results.map { r =>
-      r.copy(
-        position = unit
-          .findById(r.targetNode)
-          .flatMap(d => d.annotations.find(classOf[LexicalInformation])))
+    println("result first: " + report.results.head.toString())
+    val copied = report.copy(results = report.results.map { r =>
+      val element = unit
+        .findById(r.targetNode)
+      val maybeInformation = element
+        .flatMap(d => d.annotations.find(classOf[LexicalInformation]))
+      val location = element
+        .flatMap(d => d.annotations.find(classOf[SourceLocation]))
+        .map(_.location)
+      r.copy(position = maybeInformation, location = location)
     })
+
+    println("copied first: " + copied.results.head.toString())
+    copied
   }
 
   protected def readFile(uri: String, platform: Platform, environment: Environment): Future[String] = {
