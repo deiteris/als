@@ -1,11 +1,10 @@
 package org.mulesoft.als.server.modules.diagnostic
 
 import amf.{ProfileName, ProfileNames}
-import org.yaml.model.YMap
+import org.yaml.model.{YMap, YMapEntry, YNodeLike}
 import org.yaml.parser.JsonParser
 import amf.core.parser.YMapOps
 import amf.core.validation.{AMFValidationReport, AMFValidationResult}
-import org.yaml.model.YNodeLike
 import org.yaml.model.YNodeLike.toBoolean
 class OPAValidatorReportLoader {
 
@@ -23,11 +22,15 @@ class OPAValidatorReportLoader {
   }
 
   def loadResult(map: YMap) = {
-    val node    = map.key("focusNode".expanded).flatMap(_.value.asScalar).map(_.text).getOrElse("")
+    val node    = map.key("focusNode".expanded).flatMap(readIdValue).getOrElse("")
     val message = map.key("resultMessage".expanded).flatMap(_.value.asScalar).map(_.text).getOrElse("")
-    val level   = map.key("resultSeverity".expanded).flatMap(_.value.asScalar).map(_.text).getOrElse("Violation")
+    val level   = map.key("resultSeverity".expanded).flatMap(readIdValue).getOrElse("Violation")
     AMFValidationResult(message, level, node, None, "", None, None, null)
 
+  }
+
+  def readIdValue(e: YMapEntry) = {
+    e.value.as[YMap].key("@id").flatMap(_.value.asScalar).map(_.text)
   }
 
 }
