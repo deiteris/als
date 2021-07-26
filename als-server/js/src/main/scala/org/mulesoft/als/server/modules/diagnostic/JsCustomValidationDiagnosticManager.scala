@@ -97,17 +97,19 @@ class JsCustomValidationDiagnosticManager(override protected val telemetryProvid
       .getOrElse(Future.successful())
   }
 
-  private def processValidation(validator: AMFValidator, content: String, serializedUnit: Any, unit: BaseUnit) = {
-    validator.validate(content, JSON.stringify(serializedUnit), debug = false).map { r =>
-      new OPAValidatorReportLoader().load(r.toString)
-    } map { report =>
-      report.copy(results = report.results.map { r =>
-        r.copy(
-          position = unit
-            .findById(r.targetNode)
-            .flatMap(d => d.annotations.find(classOf[LexicalInformation])))
-      })
-    }
+  private def processValidation(validator: AMFValidator, content: String, serializedUnit: js.Any, unit: BaseUnit) = {
+    val r = validator.validate(content, JSON.stringify(serializedUnit), debug = false)
+    println("_________")
+    println(r)
+    println("_________")
+    val report = new OPAValidatorReportLoader().load(r)
+    println(report)
+    report.copy(results = report.results.map { r =>
+      r.copy(
+        position = unit
+          .findById(r.targetNode)
+          .flatMap(d => d.annotations.find(classOf[LexicalInformation])))
+    })
   }
 
   protected def readFile(uri: String, platform: Platform, environment: Environment): Future[String] = {
