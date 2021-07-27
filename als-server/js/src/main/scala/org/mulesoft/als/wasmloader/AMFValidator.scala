@@ -16,6 +16,6 @@ class AMFValidator {
 
 object AMFValidator {
   def apply(): Future[AMFValidator] = {
-    WasmLoader.load().map(_ => new AMFValidator())
+    GoWasmLoader.load().map(_ => new AMFValidator())
   }
 }
