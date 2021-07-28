@@ -27,7 +27,11 @@ import org.mulesoft.amfintegration.{AmfInstance, AmfResolvedUnit}
 
 import scala.collection.mutable.ListBuffer
 
-class WorkspaceManagerFactoryBuilder(clientNotifier: ClientNotifier, logger: Logger, env: Environment = Environment())
+class WorkspaceManagerFactoryBuilder(clientNotifier: ClientNotifier,
+                                     logger: Logger,
+                                     env: Environment = Environment(),
+                                     platformSerializer: PlatformSerializer = EmptyPlatformSerializer,
+                                     validatorBuilder: ValidatorBuilder = EmptyValidatorBuilder)
     extends PlatformSecrets {
 
   private var amfConfig: AmfInstance                        = AmfInstance.default
@@ -62,8 +66,9 @@ class WorkspaceManagerFactoryBuilder(clientNotifier: ClientNotifier, logger: Log
   val telemetryManager: TelemetryManager =
     new TelemetryManager(clientNotifier, logger)
 
-  def serializationManager[S](sp: SerializationProps[S]): SerializationManager[S] = {
-    val s = new SerializationManager(telemetryManager, amfConfig, sp, logger)
+  def serializationManager[S](sp: SerializationProps[S],
+                              clientConnection: AlsClientNotifier[S]): SerializationManager[S] = {
+    val s = new SerializationManager(telemetryManager, amfConfig, clientConnection, sp, logger)
     resolutionDependencies += s
     s
   }
@@ -79,7 +84,10 @@ class WorkspaceManagerFactoryBuilder(clientNotifier: ClientNotifier, logger: Log
                                                  logger,
                                                  env,
                                                  gatherer,
-                                                 validationProfileRegister)
+                                                 validationProfileRegister,
+                                                 platformSerializer,
+                                                 validatorBuilder,
+                                                 platform)
     resolutionDependencies += rdm
     projectDependencies += dm
     resolutionDependencies += cpm

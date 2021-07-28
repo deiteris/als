@@ -43,7 +43,7 @@ object Main extends PlatformSecrets {
       val logger = JsPrintLnLogger()
 
       val clientConnection   = ClientNotifierFactory.createWithClientAware(logger)
-      val serializationProps = JsSerializationProps(clientConnection)
+      val serializationProps = JsSerializationProps()
       val languageServer = LanguageServerFactory.fromLoaders(
         clientConnection,
         serializationProps,

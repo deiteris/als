@@ -1,9 +1,9 @@
 package org.mulesoft.als.server.modules.serialization
 
 import java.util.UUID
-
 import amf.core.model.document.{BaseUnit, Document}
 import amf.plugins.document.webapi.model.{Extension, Overlay}
+import org.mulesoft.als.server.client.AlsClientNotifier
 import org.mulesoft.als.server.feature.serialization._
 import org.mulesoft.als.server.logger.Logger
 import org.mulesoft.als.server.modules.ast.ResolvedUnitListener
@@ -22,6 +22,7 @@ import scala.util.{Failure, Success}
 
 class SerializationManager[S](telemetryProvider: TelemetryProvider,
                               amfConf: AmfInstance,
+                              notifier: AlsClientNotifier[S],
                               val props: SerializationProps[S],
                               override val logger: Logger)
     extends ClientNotifierModule[SerializationClientCapabilities, SerializationServerOptions]
@@ -47,7 +48,7 @@ class SerializationManager[S](telemetryProvider: TelemetryProvider,
   def serialize(ast: AmfResolvedUnit, uuid: String): Future[Unit] =
     ast.resolvedUnit
       .flatMap(process)
-      .map(s => props.alsClientNotifier.notifySerialization(s))
+      .map(s => notifier.notifySerialization(s))
 
   override def onRemoveFile(uri: String): Unit = {
     /* No action required */

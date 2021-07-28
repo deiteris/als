@@ -1,30 +1,24 @@
 package org.mulesoft.als.server.modules.diagnostic
 
-import amf.core.AMFSerializer
 import amf.core.annotations.SourceLocation
-import amf.core.emitter.RenderOptions
-import amf.{ProfileName, ProfileNames}
 import amf.core.model.document.BaseUnit
 import amf.core.registries.AMFPluginsRegistry
-import amf.core.remote.{Amf, Mimes, Platform, UnsupportedUrlScheme}
+import amf.core.remote.{Platform, UnsupportedUrlScheme}
 import amf.core.validation.AMFValidationReport
 import amf.internal.environment.Environment
-import org.mulesoft.als.server.JsSerializationProp
+import amf.{ProfileName, ProfileNames}
 import org.mulesoft.als.server.client.ClientNotifier
 import org.mulesoft.als.server.logger.Logger
-import org.mulesoft.als.server.modules.ast.{BaseUnitListener, BaseUnitListenerParams, ResolvedUnitListener}
+import org.mulesoft.als.server.modules.ast.ResolvedUnitListener
 import org.mulesoft.als.server.modules.common.reconciler.Runnable
 import org.mulesoft.als.server.modules.customvalidation.RegisterProfileManager
-import org.mulesoft.als.server.modules.serialization.SerializationManager
 import org.mulesoft.als.server.workspace.WorkspaceManager
 import org.mulesoft.amfintegration.AmfImplicits.BaseUnitImp
 import org.mulesoft.amfintegration.{AmfInstance, AmfResolvedUnit, DiagnosticsBundle}
 import org.mulesoft.lsp.feature.telemetry.{MessageTypes, TelemetryProvider}
-import org.yaml.builder.DocBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.scalajs.js
+import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success}
 
 class CustomProfileDiagnosticManager(override protected val telemetryProvider: TelemetryProvider,
@@ -33,7 +27,7 @@ class CustomProfileDiagnosticManager(override protected val telemetryProvider: T
                                      override protected val env: Environment,
                                      override protected val validationGatherer: ValidationGatherer,
                                      val registry: RegisterProfileManager,
-                                     val serializationManager: SerializationManager[_],
+                                     val platformSerializer: PlatformSerializer,
                                      val validatorBuilder: ValidatorBuilder,
                                      val platform: Platform)
     extends DiagnosticManager
@@ -80,38 +74,19 @@ class CustomProfileDiagnosticManager(override protected val telemetryProvider: T
       .map(bu => bu.location().getOrElse(bu.id))
       .toSet + baseUnit.location().getOrElse(baseUnit.id)
 
-  private def serialize(unit: BaseUnit, builder: DocBuilder[_]): Future[Unit] = {
-    new AMFSerializer(unit, Mimes.`APPLICATION/LD+JSONLD`, Amf.name, RenderOptions().withCompactUris.withSourceMaps)
-      .renderToBuilder(builder)(ExecutionContext.Implicits.global)
-  }
-
   private def gatherValidationErrors(uri: String,
                                      resolved: AmfResolvedUnit,
                                      references: Map[String, DiagnosticsBundle],
                                      uuid: String): Future[Unit] = {
     val startTime = System.currentTimeMillis()
-    serializationManager.props match {
-      case a: JsSerializationProp[_] => doDiagnostics(uri, resolved, references, uuid, startTime, a.newDocBuilder2())
-      case _                         => Future.successful()
-    }
-
-  }
-
-  private def doDiagnostics(uri: String,
-                            resolved: AmfResolvedUnit,
-                            references: Map[String, DiagnosticsBundle],
-                            uuid: String,
-                            startTime: Long,
-                            docBuilder: DocBuilder[_]): Future[Unit] = {
-    val builder = docBuilder
 
     for {
-      validator <- validatorBuilder()
-      unit      <- resolved.resolvedUnit
-      _         <- serialize(unit, builder)
+      validator      <- validatorBuilder()
+      unit           <- resolved.resolvedUnit
+      serializedUnit <- platformSerializer.serialize(unit)
       reports <- Future.sequence(registry.profiles.map(uri =>
         readFile(uri, platform, env).map(content => {
-          processValidation(validator, content, builder.result, unit)
+          processValidation(validator, content, serializedUnit, unit)
         })))
     } yield {
       val results = reports.flatMap { r =>

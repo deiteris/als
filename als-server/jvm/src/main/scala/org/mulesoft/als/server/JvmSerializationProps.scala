@@ -10,17 +10,17 @@ import org.mulesoft.lsp.feature.RequestType
 import org.yaml.builder.{DocBuilder, JsonOutputBuilder}
 
 // Default
-case class JvmSerializationProps(override val alsClientNotifier: AlsClientNotifier[StringWriter])
-    extends SerializationProps[StringWriter](alsClientNotifier) {
+case class JvmSerializationProps() extends SerializationProps[StringWriter]() {
   override def newDocBuilder(): DocBuilder[StringWriter] = JsonOutputBuilder()
 
   override val requestType: RequestType[SerializationParams, SerializationResult[StringWriter]] =
     JvmSerializationRequestType
 }
 
-object EmptyJvmSerializationProps
-    extends JvmSerializationProps(new AlsClientNotifier[StringWriter] {
-      override def notifyProjectFiles(params: FilesInProjectParams): Unit = {}
+object EmptyJvmSerializationProps extends JvmSerializationProps() {}
 
-      override def notifySerialization(params: SerializationResult[StringWriter]): Unit = {}
-    })
+object EmptyJvmClientNotifier extends AlsClientNotifier[StringWriter] {
+  override def notifyProjectFiles(params: FilesInProjectParams): Unit = {}
+
+  override def notifySerialization(params: SerializationResult[StringWriter]): Unit = {}
+}

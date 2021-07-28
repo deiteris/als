@@ -31,8 +31,9 @@ class RegisterProfileManager(telemetryProvider: TelemetryProvider, amfInstance: 
       new TelemeteredRequestHandler[RegisterProfileParams, Unit] {
         override def `type`: RegisterProfileNotificationType.type = RegisterProfileNotificationType
 
-        override def task(params: RegisterProfileParams): Future[Unit] =
+        override def task(params: RegisterProfileParams): Future[Unit] = Future {
           processRequestRegister(params.textDocument.uri)
+        }
 
         override protected def telemetry: TelemetryProvider = telemetryProvider
 
@@ -57,8 +58,9 @@ class RegisterProfileManager(telemetryProvider: TelemetryProvider, amfInstance: 
       new TelemeteredRequestHandler[RegisterProfileParams, Unit] {
         override def `type`: UnregisterProfileNotificationType.type = UnregisterProfileNotificationType
 
-        override def task(params: RegisterProfileParams): Future[Unit] =
+        override def task(params: RegisterProfileParams): Future[Unit] = Future {
           processRequestUnregister(params.textDocument.uri)
+        }
 
         override protected def telemetry: TelemetryProvider = telemetryProvider
 
@@ -88,12 +90,12 @@ class RegisterProfileManager(telemetryProvider: TelemetryProvider, amfInstance: 
   override val `type`: ConfigType[Unit, Unit] =
     new ConfigType[Unit, Unit] {}
 
-  def processRequestRegister(str: String): Future[Unit] = {
+  def processRequestRegister(str: String): Unit = {
     println("Registering: " + str)
     if (!profiles.contains(str)) profiles += str
   }
 
-  def processRequestUnregister(str: String): Future[Unit] = {
+  def processRequestUnregister(str: String): Unit = {
     println("Unregistering: " + str)
     if (profiles.contains(str)) profiles -= str
   }

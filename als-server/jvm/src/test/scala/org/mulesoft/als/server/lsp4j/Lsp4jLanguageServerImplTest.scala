@@ -42,7 +42,7 @@ class Lsp4jLanguageServerImplTest extends LanguageServerBaseTest with PlatformSe
     val notifier: AlsClientNotifier[StringWriter] = new MockAlsClientNotifier
     val server = new LanguageServerImpl(
       new LanguageServerFactory(clientConnection)
-        .withSerializationProps(JvmSerializationProps(notifier))
+        .withSerializationProps(JvmSerializationProps())
         .withLogger(logger)
         .build())
 
@@ -60,7 +60,7 @@ class Lsp4jLanguageServerImplTest extends LanguageServerBaseTest with PlatformSe
     val notifier: AlsClientNotifier[StringWriter] = new MockAlsClientNotifier
     val server = new LanguageServerImpl(
       new LanguageServerFactory(clientConnection)
-        .withSerializationProps(JvmSerializationProps(notifier))
+        .withSerializationProps(JvmSerializationProps())
         .withLogger(logger)
         .build())
 

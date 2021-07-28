@@ -12,7 +12,12 @@ import org.mulesoft.als.server.logger.{Logger, PrintLnLogger}
 import org.mulesoft.als.server.modules.WorkspaceManagerFactoryBuilder
 import org.mulesoft.als.server.modules.diagnostic.{DiagnosticNotificationsKind, PARSING_BEFORE}
 import org.mulesoft.als.server.protocol.LanguageServer
-import org.mulesoft.als.server.{EmptyJvmSerializationProps, JvmSerializationProps, LanguageServerBuilder}
+import org.mulesoft.als.server.{
+  EmptyJvmClientNotifier,
+  EmptyJvmSerializationProps,
+  JvmSerializationProps,
+  LanguageServerBuilder
+}
 import org.mulesoft.amfintegration.AmfInstance
 
 import scala.collection.JavaConverters._
@@ -76,8 +81,8 @@ class LanguageServerFactory(clientNotifier: ClientNotifier) extends PlatformSecr
     directoryResolver.foreach(cdr => factory.withDirectoryResolver(DirectoryResolverAdapter.convert(cdr)))
     factory.withNotificationKind(notificationsKind) // move to initialization param
     val dm                    = factory.diagnosticManager()
-    val sm                    = factory.serializationManager(serialization)
-    val filesInProjectManager = factory.filesInProjectManager(serialization.alsClientNotifier)
+    val sm                    = factory.serializationManager(serialization, EmptyJvmClientNotifier)
+    val filesInProjectManager = factory.filesInProjectManager(EmptyJvmClientNotifier)
     val builders              = factory.buildWorkspaceManagerFactory()
 
     val languageBuilder =
