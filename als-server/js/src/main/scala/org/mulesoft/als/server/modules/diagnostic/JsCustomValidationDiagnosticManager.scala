@@ -2,7 +2,7 @@ package org.mulesoft.als.server.modules.diagnostic
 
 import amf.{ProfileName, ProfileNames}
 import amf.core.registries.AMFPluginsRegistry
-import amf.core.remote.{Platform, UnsupportedUrlScheme}
+import amf.core.remote.{Amf, Mimes, Platform, UnsupportedUrlScheme}
 import amf.internal.environment.Environment
 import org.mulesoft.als.server.client.ClientNotifier
 import org.mulesoft.als.server.logger.Logger
@@ -15,12 +15,15 @@ import org.mulesoft.amfintegration.AmfImplicits.BaseUnitImp
 import org.mulesoft.amfintegration.{AmfInstance, AmfResolvedUnit, DiagnosticsBundle}
 import org.mulesoft.lsp.feature.telemetry.{MessageTypes, TelemetryProvider}
 import amf.client.parse.AmfGraphParser
+import amf.core.AMFSerializer
 import amf.core.annotations.{LexicalInformation, SourceLocation}
+import amf.core.emitter.RenderOptions
 import amf.core.model.document.BaseUnit
 import amf.core.validation.AMFValidationReport
+import org.yaml.builder.DocBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.scalajs.js
 import scala.scalajs.js.JSON
 import scala.util.{Failure, Success}
@@ -75,22 +78,27 @@ class JsCustomValidationDiagnosticManager(override protected val telemetryProvid
       .map(bu => bu.location().getOrElse(bu.id))
       .toSet + baseUnit.location().getOrElse(baseUnit.id)
 
+  private def serialize(unit: BaseUnit, builder: DocBuilder[_]): Future[Unit] =
+    new AMFSerializer(unit, Mimes.`APPLICATION/LD+JSONLD`, Amf.name, RenderOptions().withCompactUris.withSourceMaps)
+      .renderToBuilder(builder)(ExecutionContext.Implicits.global)
+
   private def gatherValidationErrors(uri: String,
                                      resolved: AmfResolvedUnit,
                                      references: Map[String, DiagnosticsBundle],
                                      uuid: String): Future[Unit] = {
     val startTime = System.currentTimeMillis()
+    val builder   = serializationManager.props.newDocBuilder()
     workspaceManager.get
       .getWorkspace(uri)
       .workspaceConfiguration
       .map(config => {
         for {
-          validator      <- AMFValidator()
-          unit           <- resolved.resolvedUnit
-          serializedUnit <- serializationManager.resolveAndSerialize(unit)
+          validator <- AMFValidator()
+          unit      <- resolved.resolvedUnit
+          _         <- serialize(unit, builder)
           reports <- Future.sequence(config.validationProfiles.map(uri =>
             readFile(uri, platform, env).map(content => {
-              processValidation(validator, content, serializedUnit.result, unit)
+              processValidation(validator, content, builder.result, unit)
             })))
         } yield {
           val results = reports.flatMap { r =>

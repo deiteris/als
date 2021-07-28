@@ -22,7 +22,7 @@ import scala.util.{Failure, Success}
 
 class SerializationManager[S](telemetryProvider: TelemetryProvider,
                               amfConf: AmfInstance,
-                              props: SerializationProps[S],
+                              val props: SerializationProps[S],
                               override val logger: Logger)
     extends ClientNotifierModule[SerializationClientCapabilities, SerializationServerOptions]
     with ResolvedUnitListener
