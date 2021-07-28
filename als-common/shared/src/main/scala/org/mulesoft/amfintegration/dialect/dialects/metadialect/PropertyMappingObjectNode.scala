@@ -27,17 +27,17 @@ object PropertyMappingObjectNode extends DialectNode{
       .withName("range")
       .withLiteralRange(xsdUri.iri())
       .withEnum(Seq("string" ,
-  "integer" ,
-  "boolean" ,
-  "float" ,
-  "decimal" ,
-  "double" ,
-  "duration" ,
-  "dateTime" ,
+        "integer" ,
+        "boolean" ,
+        "float" ,
+        "decimal" ,
+        "double" ,
+        "duration" ,
+        "dateTime" ,
 
         "time" ,
-  "date" ,
-  "anyType",
+        "date" ,
+        "anyType",
         "anyUri",
         "link",
         "number",
@@ -45,7 +45,7 @@ object PropertyMappingObjectNode extends DialectNode{
         "any",
         "anyNode")),
     PropertyMapping()
-    .withId(location + s"#/declarations/$name/mapKey")
+      .withId(location + s"#/declarations/$name/mapKey")
       .withNodePropertyMapping(PropertyMappingModel.MapKeyProperty.value.iri())
       .withName("mapKey")
       .withLiteralRange(xsdUri.iri()),

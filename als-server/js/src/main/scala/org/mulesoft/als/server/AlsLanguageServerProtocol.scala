@@ -1,5 +1,6 @@
 package org.mulesoft.als.server
 
+import org.mulesoft.als.server.protocol.Validations.ClientRegisterProfileParams
 import org.mulesoft.als.server.protocol.actions.{ClientRenameFileActionParams, ClientRenameFileActionResult}
 import org.mulesoft.als.server.protocol.configuration.{ClientAlsClientCapabilities, ClientUpdateConfigurationParams}
 import org.mulesoft.als.server.protocol.diagnostic.{
@@ -72,4 +73,16 @@ object ClientSerializationRequestType {
 object ClientCleanRenameFileActionRequestType {
   val `type`: RequestType[ClientRenameFileActionParams, ClientRenameFileActionResult, js.Any, js.Any] =
     new RequestType[ClientRenameFileActionParams, ClientRenameFileActionResult, js.Any, js.Any]("RenameFile")
+}
+
+@JSExportTopLevel("RegisterProfileRequestType")
+object ClientRegisterProfileRequestType {
+  val `type`: RequestType[ClientRegisterProfileParams, Unit, js.Any, js.Any] =
+    new RequestType[ClientRegisterProfileParams, Unit, js.Any, js.Any]("registerProfile")
+}
+
+@JSExportTopLevel("UnregisterProfileRequestType")
+object ClientUnregisterProfileRequestType {
+  val `type`: RequestType[ClientRegisterProfileParams, Unit, js.Any, js.Any] =
+    new RequestType[ClientRegisterProfileParams, Unit, js.Any, js.Any]("unregisterProfile")
 }
