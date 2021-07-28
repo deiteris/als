@@ -15,7 +15,6 @@ import amf.plugins.document.webapi.validation.PayloadValidatorPlugin
 import amf.plugins.domain.VocabulariesRegister
 import amf.plugins.features.validation.custom.AMFValidatorPlugin
 import amf.plugins.features.{AMFCustomValidation, AMFValidation}
-import org.apache.jena.query.ARQ
 import org.mulesoft.als.CompilerEnvironment
 import org.mulesoft.amfintegration.vocabularies._
 
@@ -61,7 +60,6 @@ class AmfInstance(plugins: Seq[AMFPlugin], platform: Platform, environment: Envi
           alsAmlPlugin.vocabularyRegistry.index(AmlCoreVocabulary())
           alsAmlPlugin.vocabularyRegistry.index(AmlDocumentVocabulary())
           alsAmlPlugin.vocabularyRegistry.index(AlsPatchedVocabulary())
-          ARQ.init()
           val f = AMF.init().flatMap(_ => AMFValidatorPlugin.init()).map(_ => {}).andThen {
             case _ =>
               profile.vendors.foreach { v =>

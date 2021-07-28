@@ -2,7 +2,7 @@ package org.mulesoft.amfintegration.dialect.dialects.metadialect
 
 import amf.core.vocabulary.Namespace.XsdTypes._
 import org.mulesoft.amfintegration.dialect.dialects.oas.nodes.DialectNode
-import amf.plugins.document.vocabularies.metamodel.domain.{AnnotationMappingModel, PropertyMappingModel}
+import amf.plugins.document.vocabularies.metamodel.domain.{PropertyMappingModel}
 import amf.plugins.document.vocabularies.model.domain.PropertyMapping
 import org.mulesoft.amfintegration.dialect.dialects.metadialect.PropertyMappingObjectNode.{location, name}
 
@@ -120,13 +120,9 @@ trait PropertiesMappingProperties extends DialectNode {
 object AnnotationsMappingObjectNode extends PropertiesMappingProperties{
   override def name: String = "AnnotationsMappingObjectNode"
 
-  override def nodeTypeMapping: String = AnnotationMappingModel.`type`.head.iri()
+  override def nodeTypeMapping: String = "FakeIriToBuild"
 
-  override def properties: Seq[PropertyMapping] = Seq(PropertyMapping()
-    .withId(location + s"#/declarations/$name/target")
-    .withNodePropertyMapping(AnnotationMappingModel.AnnotationTarget.value.iri())
-    .withName("target")
-    .withLiteralRange(xsdString.iri())) ++ super.properties
+  override def properties: Seq[PropertyMapping] = Seq.empty
 
 }
 

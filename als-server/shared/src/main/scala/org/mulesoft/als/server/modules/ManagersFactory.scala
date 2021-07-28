@@ -82,7 +82,7 @@ class WorkspaceManagerFactoryBuilder(clientNotifier: ClientNotifier, logger: Log
                                                  validationProfileRegister)
     resolutionDependencies += rdm
     projectDependencies += dm
-    projectDependencies += cpm
+    resolutionDependencies += cpm
     projectDependencies += validationProfileRegister
     Seq(dm, rdm)
   }

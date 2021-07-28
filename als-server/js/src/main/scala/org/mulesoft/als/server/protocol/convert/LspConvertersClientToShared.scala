@@ -2,6 +2,7 @@ package org.mulesoft.als.server.protocol.convert
 
 import org.mulesoft.als.configuration.TemplateTypes
 import org.mulesoft.als.server.feature.configuration.UpdateConfigurationParams
+import org.mulesoft.als.server.feature.customvalidation.RegisterProfileParams
 import org.mulesoft.als.server.feature.diagnostic.{
   CleanDiagnosticTreeClientCapabilities,
   CleanDiagnosticTreeOptions,
@@ -10,6 +11,7 @@ import org.mulesoft.als.server.feature.diagnostic.{
 import org.mulesoft.als.server.feature.fileusage.{FileUsageClientCapabilities, FileUsageOptions}
 import org.mulesoft.als.server.feature.renamefile.{RenameFileActionClientCapabilities, RenameFileActionParams}
 import org.mulesoft.als.server.feature.serialization._
+import org.mulesoft.als.server.protocol.Validations.ClientRegisterProfileParams
 import org.mulesoft.als.server.protocol.actions.{
   ClientRenameFileActionClientCapabilities,
   ClientRenameFileActionParams
@@ -166,6 +168,10 @@ object LspConvertersClientToShared {
 
   implicit class ClientRenameFileActionParamsConverter(i: ClientRenameFileActionParams) {
     def toShared: RenameFileActionParams = RenameFileActionParams(i.oldDocument.toShared, i.newDocument.toShared)
+  }
+
+  implicit class ClientRegisterProfileParamsConverter(i: ClientRegisterProfileParams) {
+    def toShared: RegisterProfileParams = RegisterProfileParams(i.textDocument.toShared)
   }
   // $COVERAGE-ON
 }

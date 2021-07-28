@@ -15,10 +15,12 @@ import org.mulesoft.als.server.modules.WorkspaceManagerFactoryBuilder
 import org.mulesoft.als.server.modules.diagnostic.DiagnosticNotificationsKind
 import org.mulesoft.als.server.protocol.LanguageServer
 import org.mulesoft.amfintegration.AmfInstance
+import org.yaml.builder.DocBuilder.{Entry, Part, Scalar}
+import org.yaml.builder.DocBuilder.SType.{Bool, Float, Int, Str}
 import org.yaml.builder.{DocBuilder, JsOutputBuilder}
 
 import scala.scalajs.js
-import scala.scalajs.js.UndefOr
+import scala.scalajs.js.{Dynamic, JSON, UndefOr}
 import scala.scalajs.js.annotation.{JSExportAll, JSExportTopLevel}
 
 @JSExportAll
@@ -110,6 +112,70 @@ object LanguageServerFactory {
 @JSExportAll
 @JSExportTopLevel("JsSerializationProps")
 case class JsSerializationProps(override val alsClientNotifier: AlsClientNotifier[js.Any])
-    extends SerializationProps[js.Any](alsClientNotifier) {
-  override def newDocBuilder(): DocBuilder[js.Any] = JsOutputBuilder()
+    extends JsSerializationProp[js.Any](alsClientNotifier) {
+  override def newDocBuilder(): DocBuilder[js.Any]  = JsOutputBuilder()
+  override def newDocBuilder2(): DocBuilder[js.Any] = new JsonBuilder()
+}
+
+class JsonBuilder extends DocBuilder[js.Any] {
+
+  private var obj: js.Any         = _
+  override def isDefined: Boolean = obj eq null
+
+  override def result: js.Any = JSON.stringify(obj)
+
+  override def list(f: Part[js.Any] => Unit): js.Any = {
+    obj = createSeq(f)
+    obj
+  }
+
+  override def obj(f: Entry[js.Any] => Unit): js.Any = {
+    obj = createObj(f)
+    obj
+  }
+
+  override def doc(f: Part[js.Any] => Unit): js.Any = {
+    obj = createSeq(f)(0)
+    obj
+  }
+
+  private def createSeq(f: Part[js.Any] => Unit): js.Array[js.Any] = {
+    val result = new js.Array[js.Any]
+    val partBuilder: Part[js.Any] = new Part[js.Any] {
+      override def +=(element: js.Any): Unit = result.push(element)
+      override def +=(scalar: Scalar): Unit  = result.push(fromScalar(scalar))
+      override def list(f: Part[js.Any] => Unit): Option[js.Any] = {
+        val value = createSeq(f)
+        result.push(value)
+        Some(value)
+      }
+      override def obj(f: Entry[js.Any] => Unit): Option[js.Any] = {
+        val value: js.Object = createObj(f)
+        result.push(value)
+        Some(value)
+      }
+    }
+    f(partBuilder)
+    result
+  }
+
+  private def fromScalar(scalar: Scalar): js.Any = scalar.t match {
+    case Str   => scalar.value.toString
+    case Bool  => scalar.value.asInstanceOf[Boolean]
+    case Float => scalar.value.asInstanceOf[Double]
+    case Int   => scalar.value.asInstanceOf[Long]
+  }
+
+  private def createObj(f: Entry[js.Any] => Unit): js.Object = {
+    val result = js.Object()
+    val o      = result.asInstanceOf[Dynamic]
+
+    val b: Entry[js.Any] = new Entry[js.Any] {
+      override def entry(key: String, value: Scalar): Unit           = o.updateDynamic(key)(fromScalar(value))
+      override def entry(key: String, f: Part[js.Any] => Unit): Unit = o.updateDynamic(key)(createSeq(f)(0))
+    }
+    f(b)
+    result
+  }
+
 }

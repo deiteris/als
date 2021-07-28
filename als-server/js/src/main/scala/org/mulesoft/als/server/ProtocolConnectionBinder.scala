@@ -1,11 +1,16 @@
 package org.mulesoft.als.server
 
+import org.mulesoft.als.server.feature.customvalidation.{
+  RegisterProfileNotificationType,
+  UnregisterProfileNotificationType
+}
 import org.mulesoft.als.server.feature.diagnostic.CleanDiagnosticTreeRequestType
 import org.mulesoft.als.server.feature.fileusage.FileUsageRequestType
 import org.mulesoft.als.server.feature.renamefile.RenameFileActionRequestType
 import org.mulesoft.als.server.feature.serialization.{ConversionRequestType, SerializationResult}
 import org.mulesoft.als.server.feature.workspace.FilesInProjectParams
 import org.mulesoft.als.server.protocol.LanguageServer
+import org.mulesoft.als.server.protocol.Validations.ClientRegisterProfileParams
 import org.mulesoft.als.server.protocol.actions.{ClientRenameFileActionParams, ClientRenameFileActionResult}
 import org.mulesoft.als.server.protocol.client.{AlsLanguageClient, AlsLanguageClientAware}
 import org.mulesoft.als.server.protocol.configuration.{
@@ -540,5 +545,32 @@ object ProtocolConnectionBinder {
         .asInstanceOf[ClientRequestHandler[ClientRenameFileActionParams, ClientRenameFileActionResult, js.Any]]
     )
     // End RenameFileAction
+
+    // RegisterProfileAction
+    val registerProfileActionHandlerJs: js.Function2[ClientRegisterProfileParams, CancellationToken, Thenable[Unit]] =
+      (param: ClientRegisterProfileParams, _: CancellationToken) =>
+        resolveHandler(RegisterProfileNotificationType)(param.toShared).toJSPromise
+          .asInstanceOf[Thenable[Unit]]
+
+    protocolConnection.onRequest(
+      ClientRegisterProfileRequestType.`type`,
+      registerProfileActionHandlerJs
+        .asInstanceOf[ClientRequestHandler[ClientRegisterProfileParams, Unit, js.Any]]
+    )
+    // End RegisterProfileAction
+
+    // UnregisterProfileAction
+    val unregisterProfileActionHandlerJs
+      : js.Function2[ClientRegisterProfileParams, CancellationToken, Thenable[Unit]] =
+      (param: ClientRegisterProfileParams, _: CancellationToken) =>
+        resolveHandler(UnregisterProfileNotificationType)(param.toShared).toJSPromise
+          .asInstanceOf[Thenable[Unit]]
+
+    protocolConnection.onRequest(
+      ClientUnregisterProfileRequestType.`type`,
+      unregisterProfileActionHandlerJs
+        .asInstanceOf[ClientRequestHandler[ClientRegisterProfileParams, Unit, js.Any]]
+    )
+    // End UnregisterProfileAction
   }
 }

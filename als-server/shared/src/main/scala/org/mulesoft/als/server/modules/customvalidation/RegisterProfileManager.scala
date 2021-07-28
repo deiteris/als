@@ -25,7 +25,7 @@ class RegisterProfileManager(telemetryProvider: TelemetryProvider, amfInstance: 
     extends RequestModule[Unit, Unit]
     with BaseUnitListener {
 
-  val profiles: ListBuffer[ProfileName] = ListBuffer.empty
+  val profiles: ListBuffer[String] = ListBuffer.empty
   override def getRequestHandlers: Seq[TelemeteredRequestHandler[_, _]] = {
     val registerHandler: TelemeteredRequestHandler[RegisterProfileParams, Unit] =
       new TelemeteredRequestHandler[RegisterProfileParams, Unit] {
@@ -87,37 +87,15 @@ class RegisterProfileManager(telemetryProvider: TelemetryProvider, amfInstance: 
 
   override val `type`: ConfigType[Unit, Unit] =
     new ConfigType[Unit, Unit] {}
+
   def processRequestRegister(str: String): Future[Unit] = {
-    val uuid = UUID.randomUUID().toString
-
-    val r = for {
-      profile <- unitAccessor.get.getUnit(str, uuid)
-    } yield {
-      profile.unit match {
-        case d: DialectInstance =>
-          val name = AMFValidatorPlugin.loadValidationProfileInstance(AMFValidatorPlugin.parseProfile(d))
-          if (!profiles.contains(name)) profiles += name
-        case _ => // ignore
-
-      }
-    }
-    r.map(_ => {})
+    println("Registering: " + str)
+    if (!profiles.contains(str)) profiles += str
   }
+
   def processRequestUnregister(str: String): Future[Unit] = {
-    val uuid = UUID.randomUUID().toString
-
-    val r = for {
-      profile <- unitAccessor.get.getUnit(str, uuid)
-    } yield {
-      profile.unit match {
-        case d: DialectInstance =>
-          val name = AMFValidatorPlugin.loadValidationProfileInstance(AMFValidatorPlugin.parseProfile(d))
-          if (profiles.contains(name)) profiles -= name
-        case _ => // ignore
-
-      }
-    }
-    r.map(_ => {})
+    println("Unregistering: " + str)
+    if (profiles.contains(str)) profiles -= str
   }
 
   override def initialize(): Future[Unit] = Future.unit
@@ -130,14 +108,7 @@ class RegisterProfileManager(telemetryProvider: TelemetryProvider, amfInstance: 
     * @param ast  - AST
     * @param uuid - telemetry UUID
     */
-  override def onNewAst(ast: BaseUnitListenerParams, uuid: String): Unit = {
-    ast.parseResult.baseUnit match {
-      case d: DialectInstance if AMFValidatorPlugin.isValProfile(d) =>
-        val profile = AMFValidatorPlugin.parseProfile(d)
-        if (profiles.contains(profile.name)) AMFValidatorPlugin.loadValidationProfileInstance(profile)
-      case _ => // ignore
-    }
-  }
+  override def onNewAst(ast: BaseUnitListenerParams, uuid: String): Unit = {}
 
   override def onRemoveFile(uri: String): Unit = {}
 }
