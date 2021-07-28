@@ -124,12 +124,10 @@ class JsCustomValidationDiagnosticManager(override protected val telemetryProvid
     val copied = report.copy(results = report.results.map { r =>
       val element = unit
         .findById(r.targetNode)
-      val maybeInformation = element
-        .flatMap(d => d.annotations.find(classOf[LexicalInformation]))
       val location = element
         .flatMap(d => d.annotations.find(classOf[SourceLocation]))
         .map(_.location)
-      r.copy(position = maybeInformation, location = location)
+      r.copy(location = location)
     })
 
     println("copied first: " + copied.results.head.toString())
