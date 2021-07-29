@@ -36,6 +36,14 @@ case class AlsConfiguration(private var formattingOptions: Map[String, Formattin
   def getShouldPrettyPrintSerialization: Boolean = prettyPrintSerialization
 
   def setShouldPrettyPrintSerialization(value: Boolean): Unit = this.prettyPrintSerialization = value
+
+  /**
+    * in case of None, the project requests should be handled
+    * in case of Some, there will be an attempt of reading the configuration through the file
+    */
+  private var configurationType: Option[ProjectConfiguration]                 = None
+  override def getConfigurationType: Option[ProjectConfiguration]             = this.configurationType
+  def setConfigurationType(configuration: Option[ProjectConfiguration]): Unit = configurationType = configuration
 }
 
 object TemplateTypes extends Enumeration {

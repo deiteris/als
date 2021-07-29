@@ -61,10 +61,11 @@ object LanguageServerFactory {
 
     notificationKind.toOption.foreach(factory.withNotificationKind)
 
-    val dm                    = factory.diagnosticManager()
-    val sm                    = factory.serializationManager(serialization)
-    val filesInProjectManager = factory.filesInProjectManager(serialization.alsClientNotifier)
-    val builders              = factory.buildWorkspaceManagerFactory()
+    val dm                          = factory.diagnosticManager()
+    val sm                          = factory.serializationManager(serialization)
+    val filesInProjectManager       = factory.filesInProjectManager(serialization.alsClientNotifier)
+    val builders                    = factory.buildWorkspaceManagerFactory()
+    val projectConfigurationManager = factory.projectConfigurationManager(builders.configurationManager)
 
     val languageBuilder =
       new LanguageServerBuilder(builders.documentManager,
@@ -74,6 +75,7 @@ object LanguageServerFactory {
                                 sharedLogger(logger))
         .addInitializableModule(sm)
         .addInitializableModule(filesInProjectManager)
+        .addInitializableModule(projectConfigurationManager)
         .addInitializable(builders.workspaceManager)
         .addInitializable(builders.resolutionTaskManager)
         .addInitializable(builders.configurationManager)

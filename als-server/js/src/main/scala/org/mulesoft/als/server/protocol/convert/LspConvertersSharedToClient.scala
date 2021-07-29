@@ -8,15 +8,13 @@ import org.mulesoft.als.server.feature.renamefile.{
   RenameFileActionOptions,
   RenameFileActionResult
 }
-import org.mulesoft.als.server.feature.serialization.{
-  ConversionClientCapabilities,
-  ConversionRequestOptions,
-  SerializationClientCapabilities,
-  SerializationResult,
-  SerializationServerOptions,
-  SerializedDocument
+import org.mulesoft.als.server.feature.serialization._
+import org.mulesoft.als.server.feature.workspace.{
+  FilesInProjectParams,
+  ProjectConfigurationClientCapabilities,
+  ProjectConfigurationParams,
+  ProjectConfigurationTuple
 }
-import org.mulesoft.als.server.feature.workspace.FilesInProjectParams
 import org.mulesoft.als.server.modules.diagnostic.AlsPublishDiagnosticsParams
 import org.mulesoft.als.server.protocol.actions.{
   ClientRenameFileActionClientCapabilities,
@@ -32,12 +30,10 @@ import org.mulesoft.als.server.protocol.textsync.{
   DidFocusParams,
   IndexDialectParams
 }
-import org.mulesoft.lsp.configuration.{FormattingOptions, _}
-import org.mulesoft.lsp.feature.diagnostic.{ClientPublishDiagnosticsParams, PublishDiagnosticsParams}
+import org.mulesoft.lsp.configuration._
 
 import scala.language.implicitConversions
 import scala.scalajs.js
-import scala.scalajs.js.JSConverters._
 
 object LspConvertersSharedToClient {
 
@@ -158,5 +154,20 @@ object LspConvertersSharedToClient {
   implicit class ClientRenameFileActionClientCapabilitiesConverter(i: RenameFileActionClientCapabilities) {
     def toClient: ClientRenameFileActionClientCapabilities =
       ClientRenameFileActionClientCapabilities(i)
+  }
+
+  implicit class ClientProjectConfigurationClientCapabilitiesConverter(i: ProjectConfigurationClientCapabilities) {
+    def toClient: ClientProjectConfigurationClientCapabilities =
+      ClientProjectConfigurationClientCapabilities(i)
+  }
+
+  implicit class ClientProjectConfigurationParamsConverter(i: ProjectConfigurationParams) {
+    def toClient: ClientProjectConfigurationParams =
+      ClientProjectConfigurationParams(i)
+  }
+
+  implicit class ClientProjectConfigurationTupleConverter(i: ProjectConfigurationTuple) {
+    def toClient: ClientProjectConfigurationTuple =
+      ClientProjectConfigurationTuple(i)
   }
 }

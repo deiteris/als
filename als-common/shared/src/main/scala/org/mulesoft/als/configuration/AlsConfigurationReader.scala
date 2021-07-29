@@ -8,4 +8,12 @@ trait AlsConfigurationReader {
   def supportsDocumentChanges: Boolean
   def getTemplateType: TemplateTypes.TemplateTypes
   def getShouldPrettyPrintSerialization: Boolean
+
+  /**
+    * Only set during Initialization through ProjectConfigurationClientCapabilities
+    * in case of None, the project requests should be handled
+    * in case of Some, there will be an attempt of reading the configuration through the file
+    * @return
+    */
+  def getConfigurationType: Option[ProjectConfiguration]
 }

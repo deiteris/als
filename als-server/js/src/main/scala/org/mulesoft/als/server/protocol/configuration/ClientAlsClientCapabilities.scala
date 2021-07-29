@@ -26,6 +26,8 @@ trait ClientAlsClientCapabilities extends js.Object {
   def conversion: js.UndefOr[ClientConversionClientCapabilities] = js.native
 
   def renameFileAction: js.UndefOr[ClientRenameFileActionClientCapabilities] = js.native
+
+  def projectConfiguration: js.UndefOr[ClientProjectConfigurationClientCapabilities] = js.native
 }
 
 object ClientAlsClientCapabilities {

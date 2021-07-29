@@ -19,7 +19,7 @@ import org.mulesoft.als.server.modules.serialization.{ConversionManager, Seriali
 import org.mulesoft.als.server.modules.structure.StructureManager
 import org.mulesoft.als.server.modules.telemetry.TelemetryManager
 import org.mulesoft.als.server.modules.workspace.resolution.ResolutionTaskManager
-import org.mulesoft.als.server.modules.workspace.{CompilableUnit, FilesInProjectManager}
+import org.mulesoft.als.server.modules.workspace.{CompilableUnit, FilesInProjectManager, ProjectConfigurationManager}
 import org.mulesoft.als.server.textsync.{TextDocumentContainer, TextDocumentManager}
 import org.mulesoft.als.server.workspace.WorkspaceManager
 import org.mulesoft.amfintegration.{AmfInstance, AmfResolvedUnit}
@@ -83,6 +83,9 @@ class WorkspaceManagerFactoryBuilder(clientNotifier: ClientNotifier, logger: Log
     projectDependencies += fip
     fip
   }
+
+  def projectConfigurationManager(configurationManager: ConfigurationManager): ProjectConfigurationManager =
+    new ProjectConfigurationManager(configurationManager)
 
   def buildWorkspaceManagerFactory(): WorkspaceManagerFactory =
     WorkspaceManagerFactory(projectDependencies.toList,
