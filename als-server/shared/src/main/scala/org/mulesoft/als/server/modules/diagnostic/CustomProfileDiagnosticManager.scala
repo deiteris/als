@@ -11,12 +11,13 @@ import org.mulesoft.als.server.client.ClientNotifier
 import org.mulesoft.als.server.logger.Logger
 import org.mulesoft.als.server.modules.ast.ResolvedUnitListener
 import org.mulesoft.als.server.modules.common.reconciler.Runnable
-import org.mulesoft.als.server.modules.customvalidation.RegisterProfileManager
+import org.mulesoft.als.server.modules.customvalidation.{ProfileListener, RegisterProfileManager}
 import org.mulesoft.als.server.workspace.WorkspaceManager
 import org.mulesoft.amfintegration.AmfImplicits.BaseUnitImp
 import org.mulesoft.amfintegration.{AmfInstance, AmfResolvedUnit, DiagnosticsBundle}
 import org.mulesoft.lsp.feature.telemetry.{MessageTypes, TelemetryProvider}
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success}
@@ -31,8 +32,9 @@ class CustomProfileDiagnosticManager(override protected val telemetryProvider: T
                                      val validatorBuilder: ValidatorBuilder,
                                      val platform: Platform)
     extends DiagnosticManager
-    with ResolvedUnitListener {
-
+    with ResolvedUnitListener
+    with ProfileListener {
+  registry.withListener(this)
   override protected val timeout: Int                       = 1000
   override protected val managerName: DiagnosticManagerKind = CustomValidationDiagnosticKind
   override type RunType = CustomValidationRunnable
@@ -66,6 +68,7 @@ class CustomProfileDiagnosticManager(override protected val telemetryProvider: T
 
   override def onRemoveFile(uri: String): Unit = {
     validationGatherer.removeFile(uri, managerName)
+    removeFile(uri)
     clientNotifier.notifyDiagnostic(AlsPublishDiagnosticsParams(uri, Nil, ProfileNames.AMF))
   }
 
@@ -78,6 +81,7 @@ class CustomProfileDiagnosticManager(override protected val telemetryProvider: T
                                      resolved: AmfResolvedUnit,
                                      references: Map[String, DiagnosticsBundle],
                                      uuid: String): Future[Unit] = {
+    if (!validatedFiles.contains(uri)) addFile(uri)
     val startTime = System.currentTimeMillis()
     for {
       validator      <- validatorBuilder()
@@ -174,5 +178,23 @@ class CustomProfileDiagnosticManager(override protected val telemetryProvider: T
 
     def isCanceled(): Boolean = canceled
   }
+  var validatedFiles: List[String] = List.empty
 
+  private def addFile(uri: String): Unit = synchronized {
+    validatedFiles = validatedFiles :+ uri
+  }
+  private def removeFile(uri: String): Unit = synchronized {
+    validatedFiles = validatedFiles.filterNot(a => a == uri)
+  }
+  override def newProfile(): Unit = {
+    val uuid = UUID.randomUUID().toString
+    validatedFiles.flatMap(
+      uri =>
+        unitAccessor.map(
+          a =>
+            a.getUnit(uri, uuid)
+              .flatMap(unit => {
+                gatherValidationErrors(uri, unit, unit.diagnosticsBundle, uuid)
+              })))
+  }
 }

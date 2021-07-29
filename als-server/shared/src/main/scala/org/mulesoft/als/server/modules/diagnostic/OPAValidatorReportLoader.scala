@@ -16,6 +16,7 @@ class OPAValidatorReportLoader {
     def shacl       = SHACL_ALIAS + value
     def trace       = TRACE_ALIAS + value
     def aml         = AML_ALIAS + value
+    def unshacl     = value.replace(SHACL_ALIAS, "")
   }
 
   def load(report: String): AMFValidationReport = {
@@ -29,7 +30,7 @@ class OPAValidatorReportLoader {
   def loadResult(map: YMap) = {
     val node    = map.key("focusNode".shacl).flatMap(readIdValue).getOrElse("")
     val message = map.key("resultMessage".shacl).flatMap(_.value.asScalar).map(_.text).getOrElse("")
-    val level   = map.key("resultSeverity".shacl).flatMap(readIdValue).getOrElse("Violation")
+    val level   = map.key("resultSeverity".shacl).flatMap(readIdValue).map(_.unshacl).getOrElse("Violation")
     val lexical = map.key("trace".trace).flatMap(readTrace)
     AMFValidationResult(message, level, node, None, "", lexical, None, null)
 

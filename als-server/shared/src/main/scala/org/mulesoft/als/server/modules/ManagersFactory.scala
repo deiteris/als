@@ -73,7 +73,7 @@ class WorkspaceManagerFactoryBuilder(clientNotifier: ClientNotifier,
     s
   }
 
-  val validationProfileRegister: RegisterProfileManager = new RegisterProfileManager(telemetryManager, amfConfig)
+  val validationProfileRegister: RegisterProfileManager = new RegisterProfileManager(telemetryManager)
 
   def diagnosticManager(): Seq[DiagnosticManager] = {
     val gatherer = new ValidationGatherer(telemetryManager)

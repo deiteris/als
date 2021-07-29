@@ -24,8 +24,9 @@ class ValidationGatherer(telemetryProvider: TelemetryProvider) {
     resultsByUnit.get(manager).foreach(_.remove(uri))
 
   def indexNewReport(result: ErrorsWithTree, manager: DiagnosticManagerKind, uuid: String): Unit = synchronized {
-    if (!resultsByUnit.contains(manager))
+    if (!resultsByUnit.contains(manager)) {
       resultsByUnit.update(manager, mutable.Map.empty)
+    }
     val results: Map[String, Seq[AMFValidationResult]] =
       result.errors.groupBy(r => r.location.getOrElse(result.location))
 

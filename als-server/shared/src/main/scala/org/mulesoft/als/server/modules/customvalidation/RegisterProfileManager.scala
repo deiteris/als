@@ -16,12 +16,11 @@ import org.mulesoft.lsp.feature.TelemeteredRequestHandler
 import org.mulesoft.lsp.feature.telemetry.MessageTypes.MessageTypes
 import org.mulesoft.lsp.feature.telemetry.{MessageTypes, TelemetryProvider}
 
-import java.util.UUID
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class RegisterProfileManager(telemetryProvider: TelemetryProvider, amfInstance: AmfInstance)
+class RegisterProfileManager(telemetryProvider: TelemetryProvider)
     extends RequestModule[Unit, Unit]
     with BaseUnitListener {
 
@@ -93,11 +92,13 @@ class RegisterProfileManager(telemetryProvider: TelemetryProvider, amfInstance: 
   def processRequestRegister(str: String): Unit = {
     println("Registering: " + str)
     if (!profiles.contains(str)) profiles += str
+    listener.foreach(_.newProfile())
   }
 
   def processRequestUnregister(str: String): Unit = {
     println("Unregistering: " + str)
     if (profiles.contains(str)) profiles -= str
+    listener.foreach(_.newProfile())
   }
 
   override def initialize(): Future[Unit] = Future.unit
@@ -113,4 +114,13 @@ class RegisterProfileManager(telemetryProvider: TelemetryProvider, amfInstance: 
   override def onNewAst(ast: BaseUnitListenerParams, uuid: String): Unit = {}
 
   override def onRemoveFile(uri: String): Unit = {}
+
+  var listener: Option[ProfileListener] = None
+  def withListener(a: ProfileListener) {
+    listener = Some(a)
+  }
+}
+
+trait ProfileListener {
+  def newProfile(): Unit
 }
