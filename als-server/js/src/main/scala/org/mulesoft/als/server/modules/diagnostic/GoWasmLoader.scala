@@ -21,7 +21,7 @@ object GoWasmLoader extends PlatformSecrets {
       isDefined(Dynamic.global.process.versions.node)
     else false
 
-  def load(): Future[Unit] = {
+  def load(): Future[Go] = {
     if (isNode) {
       println("Node")
       new NodeGoWasmLoader().load()
@@ -34,11 +34,18 @@ object GoWasmLoader extends PlatformSecrets {
 
 sealed trait GoWasmLoader {
   def resolveModule(go: Go): Future[Instance]
-  def load(): Future[Unit] = {
-    val go = new GoEnvLoader().init()
+  def load(): Future[Go] = {
+    val loader = new GoEnvLoader()
+    val go     = loader.init()
     resolveModule(go).map(instance => {
+      println("Starting instance run")
       go.run(instance)
+        .toFuture
+        .map(_ => {
+          println(s"Go has exited? ${go.exited}")
+        })
       println("Go env loaded")
+      go
     })
   }
 }

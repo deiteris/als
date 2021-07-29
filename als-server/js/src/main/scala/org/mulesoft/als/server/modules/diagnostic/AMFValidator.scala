@@ -15,7 +15,20 @@ class AMFValidator extends Validator {
 }
 
 object AMFValidator extends ValidatorBuilder {
+  private var goInstance: Option[Go] = None
   override def apply(): Future[Validator] = {
-    GoWasmLoader.load().map(_ => new AMFValidator())
+    if (goInstance.isEmpty || goInstance.exists(_.exited.exists(b => b))) {
+      GoWasmLoader
+        .load()
+        .map(go => {
+          goInstance = Some(go)
+          new AMFValidator()
+        })
+    } else {
+      Future {
+        new AMFValidator()
+      }
+    }
+
   }
 }
