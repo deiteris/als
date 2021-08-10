@@ -1,5 +1,35 @@
 [
   {
+    "label": "null",
+    "kind": [],
+    "detail": "unknown",
+    "documentation": "null",
+    "deprecated": [],
+    "preselect": [],
+    "sortText": "11null",
+    "filterText": "\"null\":\n  ",
+    "insertText": null,
+    "insertTextFormat": [
+      1
+    ],
+    "textEdit": {
+      "range": {
+        "start": {
+          "line": 6,
+          "character": 6
+        },
+        "end": {
+          "line": 6,
+          "character": 6
+        }
+      },
+      "newText": "\"null\":\n  "
+    },
+    "additionalTextEdits": null,
+    "commitCharacters": null,
+    "command": null
+  },
+  {
     "label": "oauth2",
     "kind": [],
     "detail": "unknown",
