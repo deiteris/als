@@ -6,10 +6,10 @@ import org.mulesoft.lsp.feature.diagnostic.DiagnosticSeverity
 object ValidationSeverity extends Enumeration {
   type ValidationSeverity = Value
 
-  val Error: Value       = Value(1, "Error")
-  val Warning: Value     = Value(2, "Warning")
-  val Information: Value = Value(3, "Information")
-  val Hint: Value        = Value(4, "Hint")
+  val Error: Value       = Value(0, "Error")
+  val Warning: Value     = Value(1, "Warning")
+  val Information: Value = Value(2, "Information")
+  val Hint: Value        = Value(3, "Hint")
 
   def apply(level: String): ValidationSeverity = level match {
     case SeverityLevels.VIOLATION => Error
